@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
 import axios from "axios";
 import { connect } from "react-redux";
 
 const styles = StyleSheet.create({
     dark: {
         backgroundColor: '#202124',
-        height: 800
+        height: "100%",
     },
     header: {
         display: "flex",
@@ -139,21 +139,23 @@ class Contacts extends Component {
                         <Text style={{ color: "white" }}>...</Text>
                     </View>
                 </View>
-                {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
-                {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
-                    return (
-                        <View key={index}>
-                            <View style={styles.body}>
-                                <View style={styles.profile_container}>
-                                    <Image style={styles.headerSingleProfile} source={{ uri: user.profile }} />
-                                </View>
-                                <View style={styles.bodyTitle}>
-                                    <Text style={styles.bodyText}>{user.username}</Text>
+                <ScrollView style={{height: 100}}>
+                    {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
+                    {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
+                        return (
+                            <View key={index}>
+                                <View style={styles.body}>
+                                    <View style={styles.profile_container}>
+                                        <Image style={styles.headerSingleProfile} source={{ uri: user.profile }} />
+                                    </View>
+                                    <View style={styles.bodyTitle}>
+                                        <Text style={styles.bodyText}>{user.username}</Text>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                    );
-                })}
+                        );
+                    })}
+                </ScrollView>
             </View>
         );
     }
