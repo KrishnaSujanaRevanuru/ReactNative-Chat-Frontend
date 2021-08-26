@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button, Image, Ale
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { submitRegister } from '../../actions/actions';
+import { launchImageLibrary } from 'react-native-image-picker';
+
 class Registration extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { username: "", email: "", number: "", password: "", confirm_password: "" }
+        this.state = { username: "", email: "", number: "", password: "", confirm_password: "", imageError: "", profilePic: null, picSelected: false }
     }
     error = {}
     password = ''
@@ -83,6 +85,33 @@ class Registration extends React.Component {
                 }).catch(error => console.log(error));
         }
     }
+    pickImage = () => {
+        console.log("in pick image");
+        const Options = {
+            maxWidth: 40,
+            maxHeight: 40
+        }
+        launchImageLibrary(Options, (response) => {
+            let errors="";
+            if (response.didCancel) {
+                errors="";
+            }
+           else if (response.assets && response.assets[0].uri.type !== "image/jpeg") {
+                if (response.assets && response.assets[0].fileSize > 3072) {
+                    errors = "selected image size more than 3MB";
+                    this.setState({ imageError: errors });
+                }
+                else {
+                    this.setState({ profilePic: response && response.assets[0].uri, imageError: "", picSelected: true });
+                }
+            }
+            else {
+                errors = "selected was not jpeg format";
+                this.setState({ imageError: errors });
+            }
+
+        })
+    }
     render() {
         const InputData = [
             { Field: "Username", type: "text", placeholder: "Enter Username", error: ["enter valid username", "", "", "", ""] },
@@ -109,6 +138,11 @@ class Registration extends React.Component {
                                     {this.error.confirm_password ? <Text style={styles.error}>{input.error[4]}</Text> : null}
                                 </View>
                             )}
+                            <Text style={styles.profilePicText} onPress={this.pickImage}>
+                                {this.state.picSelected ? <Image source={{ uri: this.state.profilePic && this.state.profilePic }} style={styles.profilePic} />
+                                    : <Image source={{ uri: 'https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg' }} style={styles.profilePic} />}
+                            </Text>
+                            <Text style={styles.image_warning} >{this.state.imageError && this.state.imageError}</Text>
                             <Button title="SUBMIT" color='purple' style={styles.button} onPress={() => this.Submit()} />
                         </View>
                     </TouchableOpacity>
@@ -172,6 +206,17 @@ const styles = StyleSheet.create({
     },
     error: {
         color: 'red'
+    },
+    profilePicText: {
+        width: 80,
+        height: 60,
+    },
+    profilePic: {
+        height: 40,
+        width: 40
+    },
+    image_warning:{
+        color:"red"
     }
 });
 const mapStateToProps = (state) => (console.log("console in msp", state), {
