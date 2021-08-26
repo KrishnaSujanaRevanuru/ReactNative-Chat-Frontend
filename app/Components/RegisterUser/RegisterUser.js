@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button,  ScrollView} from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { submitRegister } from '../../actions/actions';
@@ -85,7 +85,7 @@ class Registration extends React.Component {
     }
     render() {
         const InputData = [
-            { Field: "Username", type: "text", placeholder: "Enter Username", error: ["enter valid username", "", "", "", ""] },
+            { Field: "Username", type: "default", placeholder: "Enter Username", error: ["enter valid username", "", "", "", ""] },
             { Field: "Email", type: "email-address", placeholder: "Enter Email", error: ["", "enter valid email", "", "", ""] },
             { Field: "Number", type: "numeric", placeholder: "Enter number", error: ["", "", "enter valid password", "", ""] },
             { Field: "Password", type: "password", placeholder: "Enter password", error: ["", "", "", "enter strong password", ""] },
@@ -93,7 +93,7 @@ class Registration extends React.Component {
         ]
         const { photo } = this.state;
         return (
-            <View style={styles.bg_color}>
+            <ScrollView style={styles.bg_color}>
                 <View style={styles.container}>
                     <TouchableOpacity>
                         <View>
@@ -101,7 +101,7 @@ class Registration extends React.Component {
                             {InputData.map((input, index) =>
                                 <View style={styles.padding1} key={index}>
                                     <Text style={styles.text}>{input.Field}</Text>
-                                    <TextInput keyboardType={input.type} placeholder={input.placeholder} style={styles.input} onChangeText={(value) => { this.Validate(input.type, value) }}></TextInput>
+                                    <TextInput keyboardType={input.type} placeholder={input.placeholder} style={styles.input} maxLength={input.Field === 'Number' ? 10 : null} secureTextEntry={input.type === 'password' ? true : false} onChangeText={(value) => { this.Validate(input.type, value) }}></TextInput>
                                     {this.error.username ? <Text style={styles.error}>{input.error[0]}</Text> : null}
                                     {this.error.email ? <Text style={styles.error}>{input.error[1]}</Text> : null}
                                     {this.error.number ? <Text style={styles.error}>{input.error[2]}</Text> : null}
@@ -113,7 +113,7 @@ class Registration extends React.Component {
                         </View>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </ScrollView>
         );
     }
 }
