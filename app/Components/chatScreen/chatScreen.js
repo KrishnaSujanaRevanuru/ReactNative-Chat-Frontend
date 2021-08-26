@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity ,ScrollView} from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import ContactIcon from '../../../assests/chatting.png'
 const styles = StyleSheet.create({
   dark: {
     backgroundColor: '#202124',
-    height: 800,
+    height: 1000,
   },
   header: {
     display: 'flex',
@@ -86,7 +86,6 @@ const styles = StyleSheet.create({
     height: 75,
     borderRadius: 75 / 2,
     backgroundColor: 'white',
-    top: 500,
     left: 320,
     paddingTop: 15,
   },
@@ -145,6 +144,7 @@ class ChatScreen extends Component {
   }
   render() {
     return (
+    <ScrollView>
       <View style={styles.dark}>
         <View style={styles.header}>
           <View>
@@ -186,6 +186,7 @@ class ChatScreen extends Component {
             source={ContactIcon} />
         </TouchableOpacity>
       </View>
+      </ScrollView>
     );
   }
 }

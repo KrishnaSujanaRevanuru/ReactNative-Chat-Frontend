@@ -83,7 +83,11 @@ class Registration extends React.Component {
                 }).catch(error => console.log(error));
         }
     }
+    onLoginClick = () => {
+        this.props.navigation.navigate('login');
+    }
     render() {
+     console.log("data in state",this.props.details);
         const InputData = [
             { Field: "Username", type: "text", placeholder: "Enter Username", error: ["enter valid username", "", "", "", ""] },
             { Field: "Email", type: "email-address", placeholder: "Enter Email", error: ["", "enter valid email", "", "", ""] },
@@ -93,6 +97,7 @@ class Registration extends React.Component {
         ]
         const { photo } = this.state;
         return (
+
             <View style={styles.bg_color}>
                 <View style={styles.container}>
                     <TouchableOpacity>
@@ -111,6 +116,7 @@ class Registration extends React.Component {
                             )}
                             <Button title="SUBMIT" color='purple' style={styles.button} onPress={() => this.Submit()} />
                         </View>
+                        <Text style={styles.Logintext} onPress={() => { this.onLoginClick() }}>Login</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -172,7 +178,12 @@ const styles = StyleSheet.create({
     },
     error: {
         color: 'red'
-    }
+    },
+    Logintext: {
+        paddingLeft: 70,
+        paddingTop: 10,
+        color: 'white'
+      }
 });
 const mapStateToProps = (state) => (console.log("console in msp", state), {
     details: state,
