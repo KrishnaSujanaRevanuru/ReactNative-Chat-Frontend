@@ -1,13 +1,12 @@
 import React, { Component } from 'react'
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import Registration from './RegisterUser/RegisterUser';
 import Login from './login/login';
 import ChatScreen from './chatScreen/chatScreen';
 import Contacts from './chatScreen/contacts';
+import ChatRoom from './chatRoom/chatRoom';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ChatRoom from './chatRoom/chatRoom';
-import ThreeDots from '../../assests/three-dots.svg'
 const Stack = createNativeStackNavigator();
 export default class Routing extends Component {
   render() {
