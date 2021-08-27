@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import ContactIcon from '../../../assests/chatting.png'
+import { createClient } from '../../actions/actions'
 const styles = StyleSheet.create({
   dark: {
     backgroundColor: '#202124',
@@ -141,31 +142,24 @@ class ChatScreen extends Component {
         }
       });
   };
+
+  open = (user) => {
+    this.props.createClient(user);
+    console.log(user);
+    this.props.navigation.navigate('chatroom');
+  }
+
   onContactClick = () => {
     this.props.navigation.navigate('contacts');
   }
   render() {
     return (
       <View style={styles.dark}>
-        <View style={styles.header}>
-          <View>
-            <Image
-              style={styles.headerProfile}
-              source={{ uri: this.props.user.profile, }} />
-          </View>
-          <View style={styles.headerTitle}>
-            <Text style={styles.headerText}>Conversations</Text>
-          </View>
-          <View style={styles.headerMenu}>
-            {/* <Image source={{}} /> */}
-            <Text style={{ color: 'white' }}>...</Text>
-          </View>
-        </View>
         <View>
           {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
           {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
             return (
-              <View key={index} style={styles.body}>
+              <TouchableOpacity key={index} style={styles.body} onPress={() => { this.open(user.client) }}>
                 <View style={styles.containerBody}>
                   <Image
                     style={styles.bodyProfile}
@@ -177,7 +171,7 @@ class ChatScreen extends Component {
                 <View style={styles.bodyTitle}>
                   <Text style={styles.bodyText}>{user.client.username}</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>

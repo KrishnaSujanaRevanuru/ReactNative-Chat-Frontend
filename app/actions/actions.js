@@ -22,6 +22,11 @@ export const submitRegister = (details) => ({
     details
 });
 
+export const createSocket = (data) => ({
+    type: 'CREATE_SOCKET',
+    payload: data
+});
+
 export const logOut = () => ({
     type: 'LOG_OUT',
 });

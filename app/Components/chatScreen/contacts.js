@@ -139,7 +139,7 @@ class Contacts extends Component {
                         <Text style={{ color: "white" }}>...</Text>
                     </View>
                 </View>
-                <ScrollView style={{height: 100}}>
+                <ScrollView style={{ height: 100 }}>
                     {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
                     {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
                         return (

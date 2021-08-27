@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button,  ScrollView} from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button, ScrollView } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { submitRegister } from '../../actions/actions';
@@ -75,10 +75,21 @@ class Registration extends React.Component {
                 mobile: this.state.number,
                 password: this.state.password
             };
+            console.log(details)
             axios.post("https://ptchatindia.herokuapp.com/register", details)
                 .then(res => {
                     console.log(res.status)
                     if (res.status === 200) {
+                        console.log(res.data);
+                        details = [];
+                        res.data.map((user, index) => {
+                            if (user.username === this.props.user.username) {
+                                this.setState({ user: user });
+                                index = index;
+                            } else {
+                                details.push(user);
+                            }
+                        });
                         this.props.submitRegister(res.data.data)
                         this.props.navigation.navigate('chatscreen');
                     }
@@ -92,11 +103,11 @@ class Registration extends React.Component {
             maxHeight: 40
         }
         launchImageLibrary(Options, (response) => {
-            let errors="";
+            let errors = "";
             if (response.didCancel) {
-                errors="";
+                errors = "";
             }
-           else if (response.assets && response.assets[0].uri.type !== "image/jpeg") {
+            else if (response.assets && response.assets[0].uri.type !== "image/jpeg") {
                 if (response.assets && response.assets[0].fileSize > 3072) {
                     errors = "selected image size more than 3MB";
                     this.setState({ imageError: errors });
@@ -215,8 +226,8 @@ const styles = StyleSheet.create({
         height: 40,
         width: 40
     },
-    image_warning:{
-        color:"red"
+    image_warning: {
+        color: "red"
     }
 });
 const mapStateToProps = (state) => (console.log("console in msp", state), {
