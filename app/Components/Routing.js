@@ -12,6 +12,7 @@ import Registration from './RegisterUser/RegisterUser';
 import Login from './login/login';
 import ChatScreen from './chatScreen/chatScreen';
 import Contacts from './chatScreen/contacts';
+import ChatRoom from "./chatRoom/chatRoom"
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 const Stack = createNativeStackNavigator();
@@ -24,6 +25,7 @@ export default class Routing extends Component {
           <Stack.Screen name="login" component={Login} options={{ header: () => null }} />
           <Stack.Screen name="chatscreen" component={ChatScreen} options={{ header: () => null }} />
           <Stack.Screen name="contacts" component={Contacts} options={{ header: () => null }} />
+          <Stack.Screen name="chatRoom" component={ChatRoom} options={{ header: () => null }} />
         </Stack.Navigator>
       </NavigationContainer>
     )

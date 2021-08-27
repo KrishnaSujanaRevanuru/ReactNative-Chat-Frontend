@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import ContactIcon from '../../../assests/chatting.png'
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 70 / 2,
     backgroundColor: 'white',
-    top: 680,
+    top: "90%",
     paddingTop: 15,
     position: 'absolute',
     alignSelf: 'flex-end',
@@ -181,11 +181,11 @@ class ChatScreen extends Component {
             );
           })}
         </View>
-        <Pressable style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
+        <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
           <Image
             style={styles.BottomProfile}
             source={ContactIcon} />
-        </Pressable>
+        </TouchableOpacity>
       </View>
     );
   }
