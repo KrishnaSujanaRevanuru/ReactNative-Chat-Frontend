@@ -26,12 +26,12 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#cac3c3',
-    paddingLeft: 30
+    paddingLeft: 0,
   },
   container: {
     display: "flex",
     alignSelf: 'center',
-    justifyContent: "center",
+    justifyContent: 'center',
     backgroundColor: "#383a3f",
     fontFamily: 'sans-serif',
     height: 300,
@@ -43,10 +43,10 @@ const styles = StyleSheet.create({
   },
   input: {
     alignSelf: 'center',
-    borderWidth: 2,
     backgroundColor: 'white',
     padding: 0,
-    width: 150
+    width: 150,
+    borderRadius:5
   },
   field: {
     margin: 20,

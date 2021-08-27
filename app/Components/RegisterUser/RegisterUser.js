@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button,  ScrollView} from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button,  ScrollView, Image} from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { submitRegister } from '../../actions/actions';
