@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import ContactIcon from '../../../assests/chatting.png'
@@ -10,8 +10,8 @@ const styles = StyleSheet.create({
   },
   header: {
     display: 'flex',
-    justifyContent: 'center',
-    alignSelf: 'center',
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
     flexDirection: 'row',
     backgroundColor: '#202124',
     paddingTop: 10
@@ -25,20 +25,50 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   headerTitle: {
-    width: 260,
     height: 60,
     display: 'flex',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignSelf: 'flex-start',
-    marginLeft: 20,
+  },
+  headerInput: {
+    backgroundColor: "#383a3f",
+    color: 'white',
+    width: 130,
+    height: 32,
+    padding: 10,
+    fontSize: 13,
+    fontWeight: 'bold',
+    borderRadius: 15,
+  },
+  notFound: {
+     color: 'white',
+     fontSize: 15,
+     top: '10%',
+     alignSelf: 'center',
+  },
+  headerSearch: {
+    display: 'flex',
+    flexDirection: 'row',
+    top: '22%',
+  },
+  headerSearchIcon: {
+    fontSize: 18,
+    top: '5%',
+    right: '15%'
   },
   headerText: {
     color: 'white',
+    fontSize: 16,
+    left: '10%',
+    top: '8%',
   },
   headerMenu: {
     width: 40,
     height: 60,
     display: 'flex',
+    flexDirection: 'row',
+    top: '22%',
     justifyContent: 'center',
     alignSelf: 'center',
   },
@@ -86,11 +116,10 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 70 / 2,
     backgroundColor: 'white',
-    top: 680,
+    top: '90%',
     paddingTop: 15,
     position: 'absolute',
     alignSelf: 'flex-end',
-
   },
   BottomProfile: {
     width: 50,
@@ -106,6 +135,10 @@ class ChatScreen extends Component {
     this.state = {
       Data: null,
       isEmpty: false,
+      isSearch: false,
+      searchValue: '',
+      searchData: [],
+      usernames: [],
     };
   }
   componentDidMount() {
@@ -127,13 +160,14 @@ class ChatScreen extends Component {
       .then(res => {
         if (res.status === 200) {
           if (res.data.data && res.data.data.length) {
-            let details = [];
+            let details = [], usernames = [];
             res.data.data.map(user => {
               if (user.username !== this.props.user.username) {
                 details.push(user);
+                usernames.push(user.client);
               }
             });
-            this.setState({ Data: details });
+            this.setState({ Data: details, usernames: usernames });
           }
           else {
             this.setState({ isEmpty: true });
@@ -144,48 +178,91 @@ class ChatScreen extends Component {
   onContactClick = () => {
     this.props.navigation.navigate('contacts');
   }
+
+  searchConversations = (data) => {
+    let searchData = [];
+    let usernames = this.state.usernames;
+    if (data.length > 0) {
+      searchData = usernames.filter((result) => {
+        return result.username.toLowerCase().includes(data.toLowerCase())
+      })
+    }
+    this.setState({ searchData: searchData });
+  }
+
+  searchVisible = () => {
+    this.setState({
+      searchValue: '',
+      searchData: [] ,
+      isSearch: this.state.isSearch ? false : true,
+    });
+  }
+
   render() {
     return (
       <View style={styles.dark}>
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerTitle}>
             <Image
               style={styles.headerProfile}
               source={{ uri: this.props.user.profile, }} />
-          </View>
-          <View style={styles.headerTitle}>
             <Text style={styles.headerText}>Conversations</Text>
           </View>
+          <View style={styles.headerSearch}>
+            {this.state.isSearch &&
+              <TextInput placeholder="Search Here..." placeholderTextColor='white' style={styles.headerInput} value={this.state.searchValue}
+               onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }} />}
+          </View>
           <View style={styles.headerMenu}>
-            {/* <Image source={{}} /> */}
+            <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
             <Text style={{ color: 'white' }}>...</Text>
           </View>
         </View>
-        <View>
+        <ScrollView>
           {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
-          {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
-            return (
-              <View key={index} style={styles.body}>
-                <View style={styles.containerBody}>
-                  <Image
-                    style={styles.bodyProfile}
-                    source={{
-                      uri: user.client.profile,
-                    }}
-                  />
+          {this.state.searchValue.length === 0 ?
+            this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
+              return (
+                <View key={index} style={styles.body}>
+                  <View style={styles.containerBody}>
+                    <Image
+                      style={styles.bodyProfile}
+                      source={{
+                        uri: user.client.profile,
+                      }}
+                    />
+                  </View>
+                  <View style={styles.bodyTitle}>
+                    <Text style={styles.bodyText}>{user.client.username}</Text>
+                  </View>
                 </View>
-                <View style={styles.bodyTitle}>
-                  <Text style={styles.bodyText}>{user.client.username}</Text>
+              );
+            }) : null}
+          {this.state.searchData.length !== 0 ?
+            this.state.searchData.map((user, index) => {
+              return (
+                <View key={index} style={styles.body}>
+                  <View style={styles.containerBody}>
+                    <Image
+                      style={styles.bodyProfile}
+                      source={{
+                        uri: user.profile,
+                      }}
+                    />
+                  </View>
+                  <View style={styles.bodyTitle}>
+                    <Text style={styles.bodyText}>{user.username}</Text>
+                  </View>
                 </View>
-              </View>
-            );
-          })}
-        </View>
-        <Pressable style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
+              )
+            }) : (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
+              <Text style={styles.notFound}>Not Found</Text> : null}
+        </ScrollView>
+        <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
           <Image
             style={styles.BottomProfile}
             source={ContactIcon} />
-        </Pressable>
+        </TouchableOpacity>
       </View>
     );
   }
