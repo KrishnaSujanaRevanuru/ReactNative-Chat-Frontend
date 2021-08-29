@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image,TextInput,ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image,TextInput,ScrollView, TouchableOpacity } from 'react-native';
 import axios from "axios";
 import { connect } from "react-redux";
 
@@ -105,7 +105,18 @@ const styles = StyleSheet.create({
           width: 20,
           height:20,
           marginLeft:8,
-      }
+      },
+      goBack_icon:{
+        marginTop:17,
+        width: 20,
+        height:20,
+        marginLeft:8,
+    },
+    notFound:{
+    color:'white',
+    alignSelf:'center',
+    top:'10%',
+    }
 })
 
 class Contacts extends Component {
@@ -114,9 +125,7 @@ class Contacts extends Component {
         this.state = {
             Data: null,
             user: null,
-            filter:false,
-            start:true,
-        };
+           };
     }
     componentDidMount() {
         this.getContacts();
@@ -146,20 +155,29 @@ class Contacts extends Component {
             });
     };
     filter=[]
+    searchValue=''
     search=(contact)=>{
     this.filter=[]
+    this.searchValue=contact
     for(let i=0;i<this.state.Data.length;i++){
       if(this.state.Data[i].username.toLowerCase().includes(contact.toLowerCase()) || this.state.Data[i].mobile.includes(contact)){
         this.filter.push({username:this.state.Data[i].username,profile:this.state.Data[i].profile,mobile:this.state.Data[i].mobile,email:this.state.Data[i].email});
         }
+
     }
-    this.setState({filter:true,start:false});
+    this.setState({});
+    }
+    goToChatscreen=()=>{
+        this.props.navigation.navigate('chatscreen');
     }
     render() {
         return (
-            <ScrollView>
+            
             <View style={styles.dark}>
                 <View style={styles.header}>
+                    <TouchableOpacity onPress={this.goToChatscreen}>
+                        <Image style={styles.goBack_icon} source={{uri:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAaVBMVEUAAAD////m5ub29vYjIyOgoKD39/fz8/Ojo6MlJSUfHx+dnZ0bGxspKSkgICB8fHzc3NwXFxe7u7tjY2Nvb29VVVWWlpbCwsI5OTm0tLQPDw+Kiopqamrs7OxMTExBQUGrq6vR0dGGhoZaLh+lAAACWklEQVR4nO3c7VLqMBSF4W5EzwFFQD2i4vf9X+QBZ2SkNvlj0uWsvM8V7DW7TZq0TdcBAAAAAAAAAAAAAAAAAAAAAAAAAACgnLvr5c0/dREVLSfx4X6mrqSOh1UcLNXF1LA4iS/O1eWUd3kUMOJGXVBp017AOFNXVNjFn+jbqmsqat7v4M5KXVRJ0+8d3FFXVdD8bChgzNV1FTMb7GDEVF1YKf1pwu4qnaUCuow03+bBA5PZYpEMaDLjpzsYj+raipgNTxN7t+raikhfoiZLi0wHPQK23MFTdW1FZDroETAzTXgETD6quQS8TKwmbAJO3QeZ4RW9UcDEit4noH8H3UdR+w4ObPx++quurYjMPOgR0L6DmUHGI6B9B9fuHZynO+ix6bROB4zVpJrN9mKkgJl7sLZxboFcB6ubjJHwSRhwlIgbacCI+9oBn8UBI14qJ7xSB6zeRO1duPdUOaE6X1R/Ya6OFyT8Mf/7UD+WXlVOqJ8PnysnlD/TbGoH7Drlg3f9u3BPurYYI6B0ffg6SkDZGv9tux4pYAP7NA3stTWwX7qLSBcN2L97aqKL9u+AG3iP30YX3b+naaKL9t+1NfBtYgOfQDfwCW0DX+o38LcFXfSQ+j3WKGLmMdxleyqzXnQ5NSL974zJP6S5fVST/4AzKw2Xf7kzw426sHJSk4bPqRGpVb/NqRFdA2ebDK/6fUaaDwPz4ru6psIW/S6eqCsqrr/qv1YXVN7xetHlyfvI1zP33G7CT4dzExfqSupxP/sSAAAAAAAAAAAAAAAAAAAAAAAAAADgt/oPPIkcVNWYeXgAAAAASUVORK5CYII='}} />
+                    </TouchableOpacity>
                     <View style={styles.profile_container}>
                         <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
                     </View>
@@ -178,8 +196,9 @@ class Contacts extends Component {
                         <Text style={{ color: "white" }}>...</Text>
                     </View>
                 </View>
+                <ScrollView>
                 {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
-                { this.state.start ?
+                { this.searchValue.length===0 ?
                 <View>
                 {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
                     return (
@@ -195,9 +214,10 @@ class Contacts extends Component {
                         </View>
                     );
                 })}</View> : null }
-                {this.state.filter ?
+                {this.searchValue.length!==0 ?
                 <View>
-                {this.filter.map((user, index) => {
+                { this.filter.length!==0 ? 
+                <View>{this.filter.map((user, index) => {
                                     return (
                                         <View key={index}>
                                             <View style={styles.body}>
@@ -210,10 +230,12 @@ class Contacts extends Component {
                                             </View>
                                         </View>
                                     );
-                                })}
+                                })}</View> :
+                                <Text style={styles.notFound}>Not Found</Text>}
                 </View> : null }
+                </ScrollView>
             </View>
-            </ScrollView>
+            
         );
     }
 }

@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity ,ScrollView} from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import ContactIcon from '../../../assests/chatting.png'
 const styles = StyleSheet.create({
   dark: {
     backgroundColor: '#202124',
-    height: 1000,
+    height: '100%',
   },
   header: {
     display: 'flex',
@@ -82,19 +82,21 @@ const styles = StyleSheet.create({
     paddingTop: 300
   },
   bottomContact: {
-    width: 75,
-    height: 75,
-    borderRadius: 75 / 2,
+    width: 70,
+    height: 70,
+    borderRadius: 70 / 2,
     backgroundColor: 'white',
-    left: 320,
+    top: '90%',
     paddingTop: 15,
+    position: 'absolute',
+    alignSelf: 'flex-end',
+
   },
   BottomProfile: {
     width: 50,
     height: 50,
-    display: 'flex',
+    left: 10,
     alignItems: 'center',
-    alignSelf: 'center'
   }
 });
 
@@ -144,7 +146,7 @@ class ChatScreen extends Component {
   }
   render() {
     return (
-    <ScrollView>
+    
       <View style={styles.dark}>
         <View style={styles.header}>
           <View>
@@ -160,6 +162,7 @@ class ChatScreen extends Component {
             <Text style={{ color: 'white' }}>...</Text>
           </View>
         </View>
+        <ScrollView>
         <View>
           {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
           {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
@@ -180,13 +183,14 @@ class ChatScreen extends Component {
             );
           })}
         </View>
+        </ScrollView>
         <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
           <Image
             style={styles.BottomProfile}
             source={ContactIcon} />
         </TouchableOpacity>
       </View>
-      </ScrollView>
+      
     );
   }
 }

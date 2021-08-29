@@ -8,12 +8,13 @@ import {
   TextInput,
   StyleSheet,
   Button,
+  ScrollView
 } from 'react-native';
 
 const styles = StyleSheet.create({
   dark: {
     backgroundColor: '#202124',
-    height: 800,
+    height: "100%",
   },
   heading: {
     color: 'white',
@@ -130,7 +131,7 @@ class Login extends Component {
   };
   render() {
     return (
-      <View style={styles.dark}>
+      <ScrollView style={styles.dark}>
         <View style={styles.container}>
           <View>
             <Text style={styles.heading}>Login Form</Text>
@@ -139,8 +140,8 @@ class Login extends Component {
             <Text style={styles.text}>User Name</Text>
             <TextInput style={styles.input}
               placeholder="Enter Username"
-              onEndEditing={e =>
-                this.validationForm(e.nativeEvent.text, 'user')
+              onChangeText={text =>
+                this.validationForm(text, 'user')
               }
             />
             {this.state.isValidUserName ? (
@@ -152,8 +153,8 @@ class Login extends Component {
             <TextInput style={styles.input}
               placeholder="Enter Password"
               secureTextEntry={true}
-              onEndEditing={e =>
-                this.validationForm(e.nativeEvent.text, 'password')
+              onChangeText={text =>
+                this.validationForm(text, 'password')
               }
             />
             {this.state.isValidPassword ? (
@@ -170,7 +171,7 @@ class Login extends Component {
           </Text>
           <Text style={styles.registertext} onPress={() => { this.onRegisterClick() }}>Register</Text>
         </View>
-      </View>
+      </ScrollView>
     );
   }
 }
