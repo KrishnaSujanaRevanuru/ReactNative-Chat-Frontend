@@ -17,16 +17,16 @@ class Tab extends Component {
     return (
       <NavigationContainer>
       <TabNavigator.Navigator>
-        <TabNavigator.Screen name="chatscreen" component={ChatScreen} options={{ header: () => null }} />
+        <TabNavigator.Screen name="chatScreen" component={ChatScreen} options={{ header: () => null }} />
         <TabNavigator.Screen name="contacts" component={Contacts} options={{ header: () => null }} />
-        <TabNavigator.Screen name="chatroom" component={ChatRoom} options={{ header: () => null }} />
+        <TabNavigator.Screen name="chatRoom" component={ChatRoom} options={{ header: () => null }} />
       </TabNavigator.Navigator>
      </NavigationContainer>
     );
   }
 }
 
-const authenticateapp = createStackNavigator({
+const authenticateApp = createStackNavigator({
   login:Login,
   registration:Registration,
   
@@ -39,12 +39,12 @@ const authenticateapp = createStackNavigator({
 );
 
 const SwitchNavigator = createAppContainer(createSwitchNavigator({
-  authenticateapp: authenticateapp,
-  appscreen:Tab,
+  authenticateApp: authenticateApp,
+  appScreen:Tab,
 
 },
 {
-  initialRouteName: 'authenticateapp',
+  initialRouteName: 'authenticateApp',
 }
 ))
 

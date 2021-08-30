@@ -104,24 +104,20 @@ class Login extends Component {
   }
   LoginForm = () => {
     if (this.state.validationCheck) {
-      console.log(this.state.userDetails);
-      console.log("logged in");
       axios
         .post("https://ptchatindia.herokuapp.com/login", {
           username: this.state.userDetails.name,
           password: this.state.userDetails.password,
         })
         .then((res) => {
-          console.log(res.data);
           if (res.status === 200) {
             this.props.userLogin(res.data.data);
-            this.props.navigation.navigate('appscreen');
+            this.props.navigation.navigate('appScreen');
           } else {
             this.setState({ failedLogin: !this.failedLogin });
           }
         })
         .catch((err) => {
-          console.log(err);
           this.setState({ failedLogin: !this.failedLogin });
         });
     }

@@ -111,7 +111,6 @@ class Contacts extends Component {
                 },
             })
             .then((res) => {
-                console.log("response", res);
                 let index = null,
                     details = [];
                 res.data.map((user, index) => {
@@ -128,7 +127,7 @@ class Contacts extends Component {
 
     onContactClick = (user) => {
         this.props.createClient(user);
-        this.props.navigation.navigate('chatroom');
+        this.props.navigation.navigate('chatRoom');
     }
     render() {
         return (
@@ -170,7 +169,6 @@ class Contacts extends Component {
 }
 
 const mapStateToProps = (state) => (
-    console.log("state home page from redux in mapstatetoprops", state),
     {
         user: state.user.userDetails,
         client: state.user.client

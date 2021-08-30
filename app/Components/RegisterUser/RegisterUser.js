@@ -68,7 +68,6 @@ class Registration extends React.Component {
             alert("not submitted");
         }
         else {
-            console.log("submitted");
             let details = {
                 username: this.state.username,
                 email: this.state.email,
@@ -77,16 +76,14 @@ class Registration extends React.Component {
             };
             axios.post("https://ptchatindia.herokuapp.com/register", details)
                 .then(res => {
-                    console.log(res.status)
                     if (res.status === 200) {
                         this.props.submitRegister(res.data.data)
-                        this.props.navigation.navigate('appscreen');
+                        this.props.navigation.navigate('appScreen');
                     }
                 }).catch(error => console.log(error));
         }
     }
     pickImage = () => {
-        console.log("in pick image");
         const Options = {
             maxWidth: 40,
             maxHeight: 40
@@ -219,7 +216,7 @@ const styles = StyleSheet.create({
         color:"red"
     }
 });
-const mapStateToProps = (state) => (console.log("console in msp", state), {
+const mapStateToProps = (state) => ( {
     details: state,
 });
 

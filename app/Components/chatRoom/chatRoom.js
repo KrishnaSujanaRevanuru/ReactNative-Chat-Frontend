@@ -84,7 +84,6 @@ class ChatRoom extends Component {
   };
 
   send = () => {
-      console.log('send');
     if (this.state.chatMessage) {
       this.socket.emit('chat', {
         username: this.props.user.username,
@@ -104,7 +103,6 @@ class ChatRoom extends Component {
     }
 
     handleText = (msg) => {
-        console.log(msg);
         this.setState({ message: msg,chatMessage:msg })
     }
 
@@ -419,7 +417,6 @@ emojiadd: {
 });
 
 const mapStateToProps = state => (
-  console.log('map state to props', state),
   {
     user: state.user.userDetails,
     client: state.user.client,

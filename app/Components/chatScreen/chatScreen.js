@@ -182,9 +182,7 @@ class ChatScreen extends Component {
         },
       })
       .then(res => {
-        console.log('res',res.status);
         if (res.status === 200) {
-          console.log('status 200',res.status);
           if (res.data.data && res.data.data.length) {
             let details = [], usernames = [];
             res.data.data.map(user => {
@@ -248,9 +246,8 @@ getDurationByTimestamp = (timestamp) => {
   }
 
   onConversationClick = (user) => {
-    console.log("user");
     this.props.createClient(user);
-    this.props.navigation.navigate('chatroom');
+    this.props.navigation.navigate('chatRoom');
 }
 
   render() {
@@ -331,7 +328,6 @@ getDurationByTimestamp = (timestamp) => {
 
 
 const mapStateToProps = (state) => (
-  console.log("state home page from redux in mapstatetoprops", state),
   {
     user: state.user.userDetails,
     client: state.user.client
