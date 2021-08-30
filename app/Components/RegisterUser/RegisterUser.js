@@ -13,7 +13,7 @@ class Registration extends React.Component {
     error = {}
     password = ''
     Validate = (type, Value) => {
-        if (type === "text") {
+        if (type === "default") {
             this.setState({ username: Value })
             if (Value.length < 4) {
                 this.error.username = true;
@@ -80,7 +80,7 @@ class Registration extends React.Component {
                     console.log(res.status)
                     if (res.status === 200) {
                         this.props.submitRegister(res.data.data)
-                        this.props.navigation.navigate('chatscreen');
+                        this.props.navigation.navigate('appscreen');
                     }
                 }).catch(error => console.log(error));
         }

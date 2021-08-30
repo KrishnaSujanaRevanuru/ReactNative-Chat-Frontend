@@ -115,7 +115,7 @@ class Login extends Component {
           console.log(res.data);
           if (res.status === 200) {
             this.props.userLogin(res.data.data);
-            this.props.navigation.navigate('chatscreen');
+            this.props.navigation.navigate('appscreen');
           } else {
             this.setState({ failedLogin: !this.failedLogin });
           }

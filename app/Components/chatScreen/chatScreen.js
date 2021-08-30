@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, Pressable,TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
+import { createClient } from '../../actions/actions';
 import ContactIcon from '../../../assests/chatting.png';
 import MenuButton from '../../../assests/horizontalDots.png';
 
@@ -12,44 +13,75 @@ const styles = StyleSheet.create({
   },
   header: {
     display: 'flex',
-    justifyContent: 'center',
-    alignSelf: 'center',
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
     flexDirection: 'row',
     backgroundColor: '#202124',
     paddingTop: 10
   },
   headerProfile: {
-    width: 60,
-    height: 60,
+    width: 40,
+    height: 40,
     display: 'flex',
     justifyContent: 'center',
     borderRadius: 60 / 2,
     alignSelf: 'center',
   },
   headerTitle: {
-    width: 260,
     height: 60,
     display: 'flex',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignSelf: 'flex-start',
-    marginLeft: 20,
+  },
+  headerInput: {
+    backgroundColor: "#383a3f",
+    color: 'white',
+    width: 130,
+    height: 32,
+    padding: 10,
+    fontSize: 13,
+    fontWeight: 'bold',
+    borderRadius: 15,
+  },
+  notFound: {
+     color: 'white',
+     fontSize: 15,
+     top: '10%',
+     alignSelf: 'center',
+  },
+  headerSearch: {
+    display: 'flex',
+    flexDirection: 'row',
+    top: '22%',
+  },
+  headerSearchIcon: {
+    fontSize: 18,
+    top: '5%',
+    right: '15%'
   },
   headerText: {
-    color: '#e2e2e3',
+    color: 'white',
+    fontSize: 16,
+    left: '10%',
+    top: '8%',
   },
   headerMenu: {
     width: 40,
     height: 40,
     display: 'flex',
+    flexDirection: 'row',
+    top: '22%',
     justifyContent: 'center',
-    backgroundColor: '#e2e2e3',
     alignSelf: 'center',
-    borderRadius: 20,
-    padding: 10
+    right:'5%'
   },
   menu: {
     width: 20,
     height: 20,
+    backgroundColor:'#383a3f',
+    borderRadius:20,
+    left:'10%'
   },
   body: {
     display: 'flex',
@@ -66,16 +98,16 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   bodyProfile: {
-    width: 60,
-    height: 60,
-    borderRadius: 60 / 2,
+    width: 40,
+    height: 40,
+    borderRadius: 40 / 2,
     display: 'flex',
     justifyContent: 'center',
     alignSelf: 'center',
     paddingTop: 10
   },
   bodyTitle: {
-    width: 150,
+    width: 300,
     height: 60,
     display: 'flex',
     justifyContent: 'center',
@@ -89,11 +121,6 @@ const styles = StyleSheet.create({
     alignSelf:'flex-start',
     marginTop:10
   },
-  NoConversation: {
-    color: 'white',
-    alignSelf: 'center',
-    paddingTop: 300
-  },
   timeBody:{
     width:150,
     display: 'flex',
@@ -103,16 +130,20 @@ const styles = StyleSheet.create({
   time:{
     color: '#e2e2e3',
   },
+  NoConversation: {
+    color: 'white',
+    alignSelf: 'center',
+    paddingTop: 300
+  },
   bottomContact: {
     width: 70,
     height: 70,
     borderRadius: 70 / 2,
     backgroundColor: 'white',
-    top: 580,
+    top: '90%',
     paddingTop: 15,
     position: 'absolute',
     alignSelf: 'flex-end',
-
   },
   BottomProfile: {
     width: 50,
@@ -128,6 +159,10 @@ class ChatScreen extends Component {
     this.state = {
       Data: null,
       isEmpty: false,
+      isSearch: false,
+      searchValue: '',
+      searchData: [],
+      usernames: [],
     };
   }
   componentDidMount() {
@@ -147,15 +182,18 @@ class ChatScreen extends Component {
         },
       })
       .then(res => {
+        console.log('res',res.status);
         if (res.status === 200) {
+          console.log('status 200',res.status);
           if (res.data.data && res.data.data.length) {
-            let details = [];
+            let details = [], usernames = [];
             res.data.data.map(user => {
               if (user.username !== this.props.user.username) {
                 details.push(user);
+                usernames.push(user.client);
               }
             });
-            this.setState({ Data: details });
+            this.setState({ Data: details, usernames: usernames });
           }
           else {
             this.setState({ isEmpty: true });
@@ -190,28 +228,59 @@ getDurationByTimestamp = (timestamp) => {
     else if (years === 1) return (years + ' year' + ' ago')
     else return (years + ' years' + ' ago');
   }
+  searchConversations = (data) => {
+    let searchData = [];
+    let usernames = this.state.usernames;
+    if (data.length > 0) {
+      searchData = usernames.filter((result) => {
+        return result.username.toLowerCase().includes(data.toLowerCase())
+      })
+    }
+    this.setState({ searchData: searchData });
+  }
+
+  searchVisible = () => {
+    this.setState({
+      searchValue: '',
+      searchData: [] ,
+      isSearch: this.state.isSearch ? false : true,
+    });
+  }
+
+  onConversationClick = (user) => {
+    console.log("user");
+    this.props.createClient(user);
+    this.props.navigation.navigate('chatroom');
+}
+
   render() {
     return (
       <View style={styles.dark}>
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerTitle}>
             <Image
               style={styles.headerProfile}
               source={{ uri: this.props.user.profile, }} />
-          </View>
-          <View style={styles.headerTitle}>
             <Text style={styles.headerText}>Conversations</Text>
           </View>
+          <View style={styles.headerSearch}>
+            {this.state.isSearch &&
+              <TextInput placeholder="Search Here..." placeholderTextColor='white' style={styles.headerInput} value={this.state.searchValue}
+               onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }} />}
+          </View>
           <View style={styles.headerMenu}>
-          <Image style={styles.menu} source={MenuButton} />
+            <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
+            <Image style={styles.menu} source={MenuButton} />
           </View>
         </View>
-        <View>
+        <ScrollView>
           {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
-          {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
-            return (
-              <TouchableOpacity key={index} style={styles.body}>
-                  <View style={styles.containerBody}>
+          {this.state.searchValue.length === 0 ?
+            this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
+              return (
+                <View key={index} style={styles.body}>
+                  <TouchableOpacity onPress={()=>{this.onConversationClick(user)}}>
+                  <View style={styles.containerBody} >
                     <Image
                       style={styles.bodyProfile}
                       source={{
@@ -222,19 +291,39 @@ getDurationByTimestamp = (timestamp) => {
                   <View style={styles.bodyTitle}>
                     <Text style={styles.bodyText}>{user.client.username}</Text>
                     <Text style={styles.bodyText}>{user.latest.message}</Text>
-                  </View>
+                    </View>
                   <View style={styles.timeBody}>
                     <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}{' ' + this.getDurationByTimestamp(user.latest.timestamp)}</Text>
                   </View>
-                </TouchableOpacity>
-            );
-          })}
-        </View>
-        <Pressable style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
-            <Image
-              style={styles.BottomProfile}
-              source={ContactIcon} />
-        </Pressable>
+                  </TouchableOpacity>
+                </View>
+              );
+            }) : null}
+          {this.state.searchData.length !== 0 ?
+            this.state.searchData.map((user, index) => {
+              return (
+                <View key={index} style={styles.body}>
+                  <View style={styles.containerBody}>
+                    <Image
+                      style={styles.bodyProfile}
+                      source={{
+                        uri: user.profile,
+                      }}
+                    />
+                  </View>
+                  <View style={styles.bodyTitle}>
+                    <Text style={styles.bodyText}>{user.username}</Text>
+                  </View>
+                </View>
+              )
+            }) : (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
+              <Text style={styles.notFound}>Not Found</Text> : null}
+        </ScrollView>
+        <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
+          <Image
+            style={styles.BottomProfile}
+            source={ContactIcon} />
+        </TouchableOpacity>
       </View>
     );
   }

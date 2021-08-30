@@ -14,6 +14,8 @@ target 'chatfrontend' do
 
   pod 'react-native-image-picker', :path => '../node_modules/react-native-image-picker'
 
+  pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
+
   target 'chatfrontendTests' do
     inherit! :complete
     # Pods for testing
