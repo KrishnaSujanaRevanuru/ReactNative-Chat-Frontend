@@ -2,7 +2,10 @@ import React, { Component } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
-import ContactIcon from '../../../assests/chatting.png'
+import { createClient } from '../../actions/actions';
+import ContactIcon from '../../../assests/chatting.png';
+import MenuButton from '../../../assests/horizontalDots.png';
+
 const styles = StyleSheet.create({
   dark: {
     backgroundColor: '#202124',
@@ -17,8 +20,8 @@ const styles = StyleSheet.create({
     paddingTop: 10
   },
   headerProfile: {
-    width: 60,
-    height: 60,
+    width: 40,
+    height: 40,
     display: 'flex',
     justifyContent: 'center',
     borderRadius: 60 / 2,
@@ -65,12 +68,20 @@ const styles = StyleSheet.create({
   },
   headerMenu: {
     width: 40,
-    height: 60,
+    height: 40,
     display: 'flex',
     flexDirection: 'row',
     top: '22%',
     justifyContent: 'center',
     alignSelf: 'center',
+    right:'5%'
+  },
+  menu: {
+    width: 20,
+    height: 20,
+    backgroundColor:'#383a3f',
+    borderRadius:20,
+    left:'10%'
   },
   body: {
     display: 'flex',
@@ -87,9 +98,9 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   bodyProfile: {
-    width: 60,
-    height: 60,
-    borderRadius: 60 / 2,
+    width: 40,
+    height: 40,
+    borderRadius: 40 / 2,
     display: 'flex',
     justifyContent: 'center',
     alignSelf: 'center',
@@ -104,7 +115,20 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   bodyText: {
-    color: 'white',
+    color: '#e2e2e3',
+    display:'flex',
+    justifyContent:'center',
+    alignSelf:'flex-start',
+    marginTop:10
+  },
+  timeBody:{
+    width:150,
+    display: 'flex',
+    justifyContent: 'center',
+    alignSelf: 'center'
+  },
+  time:{
+    color: '#e2e2e3',
   },
   NoConversation: {
     color: 'white',
@@ -178,7 +202,30 @@ class ChatScreen extends Component {
   onContactClick = () => {
     this.props.navigation.navigate('contacts');
   }
+  getTimeByTimestamp = (timestamp) => {
+    let date = new Date(timestamp * 1000);
+    let ampm = date.getHours() >= 12 ? 'pm' : 'am';
+    let hours = date.getHours() >= 12 ? date.getHours() - 12 : date.getHours();
+    return hours + ":" + date.getMinutes() + ampm;
+}
 
+getDurationByTimestamp = (timestamp) => {
+    let date = new Date(timestamp * 1000);
+    let days = (new Date() - new Date(date.getFullYear(), date.getMonth(), date.getDate())) / (1000 * 60 * 60 * 24);
+    days = Math.floor(days);
+    let weeks = Math.floor(days / 7);
+    let months = Math.floor(days / 30);
+    let years = Math.floor(days / 365);
+    if (days === 0) return 'Today';
+    else if (days === 1) return 'Yesterday';
+    else if (days < 8) return (days + ' days' + ' ago');
+    else if (weeks === 1) return (weeks + ' week' + ' ago');
+    else if (weeks < 6) return (weeks + ' weeks' + ' ago');
+    else if (months === 1) return (months + ' month' + ' ago');
+    else if (months < 13) return (months + ' months' + ' ago');
+    else if (years === 1) return (years + ' year' + ' ago')
+    else return (years + ' years' + ' ago');
+  }
   searchConversations = (data) => {
     let searchData = [];
     let usernames = this.state.usernames;
@@ -198,6 +245,11 @@ class ChatScreen extends Component {
     });
   }
 
+  onConversationClick = (user) => {
+    this.props.createClient(user);
+    this.props.navigation.navigate('chatRoom');
+}
+
   render() {
     return (
       <View style={styles.dark}>
@@ -215,7 +267,7 @@ class ChatScreen extends Component {
           </View>
           <View style={styles.headerMenu}>
             <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
-            <Text style={{ color: 'white' }}>...</Text>
+            <Image style={styles.menu} source={MenuButton} />
           </View>
         </View>
         <ScrollView>
@@ -224,7 +276,8 @@ class ChatScreen extends Component {
             this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
               return (
                 <View key={index} style={styles.body}>
-                  <View style={styles.containerBody}>
+                  <TouchableOpacity onPress={()=>{this.onConversationClick(user)}}>
+                  <View style={styles.containerBody} >
                     <Image
                       style={styles.bodyProfile}
                       source={{
@@ -234,7 +287,12 @@ class ChatScreen extends Component {
                   </View>
                   <View style={styles.bodyTitle}>
                     <Text style={styles.bodyText}>{user.client.username}</Text>
+                    <Text style={styles.bodyText}>{user.latest.message}</Text>
+                    </View>
+                  <View style={styles.timeBody}>
+                    <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}{' ' + this.getDurationByTimestamp(user.latest.timestamp)}</Text>
                   </View>
+                  </TouchableOpacity>
                 </View>
               );
             }) : null}
@@ -270,7 +328,6 @@ class ChatScreen extends Component {
 
 
 const mapStateToProps = (state) => (
-  console.log("state home page from redux in mapstatetoprops", state),
   {
     user: state.user.userDetails,
     client: state.user.client

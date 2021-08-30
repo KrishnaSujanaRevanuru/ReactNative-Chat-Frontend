@@ -26,12 +26,12 @@ const styles = StyleSheet.create({
   },
   text: {
     color: '#cac3c3',
-    paddingLeft: 30
+    paddingLeft: 0,
   },
   container: {
     display: "flex",
     alignSelf: 'center',
-    justifyContent: "center",
+    justifyContent: 'center',
     backgroundColor: "#383a3f",
     fontFamily: 'sans-serif',
     height: 300,
@@ -43,10 +43,10 @@ const styles = StyleSheet.create({
   },
   input: {
     alignSelf: 'center',
-    borderWidth: 2,
     backgroundColor: 'white',
     padding: 0,
-    width: 150
+    width: 150,
+    borderRadius:5
   },
   field: {
     margin: 20,
@@ -104,24 +104,20 @@ class Login extends Component {
   }
   LoginForm = () => {
     if (this.state.validationCheck) {
-      console.log(this.state.userDetails);
-      console.log("logged in");
       axios
         .post("https://ptchatindia.herokuapp.com/login", {
           username: this.state.userDetails.name,
           password: this.state.userDetails.password,
         })
         .then((res) => {
-          console.log(res.data);
           if (res.status === 200) {
             this.props.userLogin(res.data.data);
-            this.props.navigation.navigate('chatscreen');
+            this.props.navigation.navigate('appScreen');
           } else {
             this.setState({ failedLogin: !this.failedLogin });
           }
         })
         .catch((err) => {
-          console.log(err);
           this.setState({ failedLogin: !this.failedLogin });
         });
     }

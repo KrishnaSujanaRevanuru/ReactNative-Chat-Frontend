@@ -5,7 +5,6 @@ export const LOG_OUT = "LOG_OUT";
 export const CREATE_CLIENT = "CREATE_CLIENT";
 
 export const fetchUser = (user) => {
-    console.log("actions")
     return {
         type: FETCH_USER,
         user
@@ -17,9 +16,9 @@ export const userLogin = (data) => ({
     data
 });
 
-export const submitRegister = (details) => ({
+export const submitRegister = (userDetails) => ({
     type: SUBMIT_REGISTER,
-    details
+    userDetails
 });
 
 export const logOut = () => ({

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView,TouchableOpacity} from 'react-native';
 import axios from "axios";
 import { connect } from "react-redux";
+import { createClient } from '../../actions/actions';
 
 const styles = StyleSheet.create({
     dark: {
@@ -110,7 +111,6 @@ class Contacts extends Component {
                 },
             })
             .then((res) => {
-                console.log("response", res);
                 let index = null,
                     details = [];
                 res.data.map((user, index) => {
@@ -124,6 +124,11 @@ class Contacts extends Component {
                 this.setState({ Data: details });
             });
     };
+
+    onContactClick = (user) => {
+        this.props.createClient(user);
+        this.props.navigation.navigate('chatRoom');
+    }
     render() {
         return (
             <View style={styles.dark}>
@@ -139,18 +144,20 @@ class Contacts extends Component {
                         <Text style={{ color: "white" }}>...</Text>
                     </View>
                 </View>
-                <ScrollView style={{height: 100}}>
+                <ScrollView style={{ height: 100 }}>
                     {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
                     {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
                         return (
                             <View key={index}>
                                 <View style={styles.body}>
-                                    <View style={styles.profile_container}>
-                                        <Image style={styles.headerSingleProfile} source={{ uri: user.profile }} />
-                                    </View>
-                                    <View style={styles.bodyTitle}>
-                                        <Text style={styles.bodyText}>{user.username}</Text>
-                                    </View>
+                                    <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick(user) }}>
+                                        <View style={styles.profile_container}>
+                                            <Image style={styles.headerSingleProfile} source={{ uri: user.profile }} />
+                                        </View>
+                                        <View style={styles.bodyTitle}>
+                                            <Text style={styles.bodyText}>{user.username}</Text>
+                                        </View>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         );
@@ -162,7 +169,6 @@ class Contacts extends Component {
 }
 
 const mapStateToProps = (state) => (
-    console.log("state home page from redux in mapstatetoprops", state),
     {
         user: state.user.userDetails,
         client: state.user.client

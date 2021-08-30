@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button,  ScrollView} from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button,  ScrollView, Image} from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { submitRegister } from '../../actions/actions';
@@ -13,7 +13,7 @@ class Registration extends React.Component {
     error = {}
     password = ''
     Validate = (type, Value) => {
-        if (type === "text") {
+        if (type === "default") {
             this.setState({ username: Value })
             if (Value.length < 4) {
                 this.error.username = true;
@@ -68,25 +68,22 @@ class Registration extends React.Component {
             alert("not submitted");
         }
         else {
-            console.log("submitted");
-            let details = {
+            let userDetails = {
                 username: this.state.username,
                 email: this.state.email,
                 mobile: this.state.number,
                 password: this.state.password
             };
-            axios.post("https://ptchatindia.herokuapp.com/register", details)
+            axios.post("https://ptchatindia.herokuapp.com/register", userDetails)
                 .then(res => {
-                    console.log(res.status)
                     if (res.status === 200) {
                         this.props.submitRegister(res.data.data)
-                        this.props.navigation.navigate('chatscreen');
+                        this.props.navigation.navigate('appScreen');
                     }
                 }).catch(error => console.log(error));
         }
     }
     pickImage = () => {
-        console.log("in pick image");
         const Options = {
             maxWidth: 40,
             maxHeight: 40
@@ -219,12 +216,12 @@ const styles = StyleSheet.create({
         color:"red"
     }
 });
-const mapStateToProps = (state) => (console.log("console in msp", state), {
-    details: state,
+const mapStateToProps = (state) => ( {
+    userDetails: state,
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    submitRegister: (details) => dispatch(submitRegister(details)),
+    submitRegister: (userDetails) => dispatch(submitRegister(userDetails)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Registration);
