@@ -16,9 +16,9 @@ export const userLogin = (data) => ({
     data
 });
 
-export const submitRegister = (details) => ({
+export const submitRegister = (userDetails) => ({
     type: SUBMIT_REGISTER,
-    details
+    userDetails
 });
 
 export const logOut = () => ({

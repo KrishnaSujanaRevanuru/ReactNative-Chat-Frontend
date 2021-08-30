@@ -68,13 +68,13 @@ class Registration extends React.Component {
             alert("not submitted");
         }
         else {
-            let details = {
+            let userDetails = {
                 username: this.state.username,
                 email: this.state.email,
                 mobile: this.state.number,
                 password: this.state.password
             };
-            axios.post("https://ptchatindia.herokuapp.com/register", details)
+            axios.post("https://ptchatindia.herokuapp.com/register", userDetails)
                 .then(res => {
                     if (res.status === 200) {
                         this.props.submitRegister(res.data.data)
@@ -217,11 +217,11 @@ const styles = StyleSheet.create({
     }
 });
 const mapStateToProps = (state) => ( {
-    details: state,
+    userDetails: state,
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    submitRegister: (details) => dispatch(submitRegister(details)),
+    submitRegister: (userDetails) => dispatch(submitRegister(userDetails)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Registration);

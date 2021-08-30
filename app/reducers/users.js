@@ -25,7 +25,7 @@ const userReducer = (state = initialState, action) => {
             return Object.assign({}, state, { userDetails: action.data });
         case SUBMIT_REGISTER:
             console.log("user register");
-            return Object.assign({}, state, { userDetails: action.details });
+            return Object.assign({}, state, { userDetails: action.userDetails });
         case LOG_OUT:
             console.log('log out');
             return initialState;
