@@ -4,7 +4,11 @@ import axios from 'axios';
 import { connect } from 'react-redux';
 import { createClient } from '../../actions/actions';
 import ContactIcon from '../../../assests/chatting.png';
-import MenuButton from '../../../assests/horizontalDots.png';
+import ArchiveIcon from '../../../assests/Archive.png';
+import { Dimensions } from 'react-native';
+import Materialicons from 'react-native-vector-icons/MaterialIcons';
+
+const { screenHeight, screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   dark: {
@@ -12,122 +16,110 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    backgroundColor: '#202124',
-    paddingTop: 10
+    display: "flex",
+    width: screenWidth,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexDirection: "row",
+    backgroundColor: "#373a3f",
+    paddingHorizontal: 10,
+    paddingVertical: 15
   },
   headerProfile: {
-    width: 40,
-    height: 40,
-    display: 'flex',
-    justifyContent: 'center',
-    borderRadius: 60 / 2,
-    alignSelf: 'center',
+    width: 50,
+    height: 50,
+    display: "flex",
+    justifyContent: "center",
+    alignSelf: "center",
+    borderRadius: 25
   },
-  headerTitle: {
-    height: 60,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
-  },
-  headerInput: {
-    backgroundColor: "#383a3f",
-    color: 'white',
-    width: 130,
-    height: 32,
-    padding: 10,
-    fontSize: 13,
-    fontWeight: 'bold',
-    borderRadius: 15,
-  },
-  notFound: {
-     color: 'white',
-     fontSize: 15,
-     top: '10%',
-     alignSelf: 'center',
+  headerText: {
+    color: "white",
+    fontSize: 22,
+    marginLeft: 15
   },
   headerSearch: {
     display: 'flex',
     flexDirection: 'row',
     top: '22%',
+
+  },
+  headerInput: {
+    backgroundColor: "#8a8787",
+    color: 'white',
+    fontSize: 13,
+    fontWeight: 'bold',
+    marginLeft: 10,
+    width: 100,
+    height: 50,
+    borderRadius: 30,
   },
   headerSearchIcon: {
-    fontSize: 18,
-    top: '5%',
-    right: '15%'
-  },
-  headerText: {
-    color: 'white',
-    fontSize: 16,
-    left: '10%',
-    top: '8%',
+    textAlign: 'right',
+    alignSelf: 'center',
+    fontSize: 20,
+    right: 40,
+    position: 'absolute'
   },
   headerMenu: {
-    width: 40,
-    height: 40,
-    display: 'flex',
-    flexDirection: 'row',
-    top: '22%',
-    justifyContent: 'center',
+    textAlign: 'right',
+    color: 'white',
     alignSelf: 'center',
-    right:'5%'
+    fontSize: 24,
+    right: 10,
+    top: 15,
+    position: 'absolute',
   },
-  menu: {
-    width: 20,
-    height: 20,
-    backgroundColor:'#383a3f',
-    borderRadius:20,
-    left:'10%'
+  scrollViewContainer: {
+    height: screenHeight,
+    width: screenWidth,
+    paddingHorizontal: 15,
+    paddingVertical: 10
   },
   body: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    flexDirection: 'row',
-    backgroundColor: '#383a3f',
-    borderRadius: 50,
-    marginBottom: 20,
-    paddingLeft: 5,
-    marginTop: 10
-  },
-  containerBody: {
-    padding: 10,
+    display: "flex",
+    width: screenWidth,
+    height: 70,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexDirection: "row",
+    backgroundColor: "#383a3f",
+    borderRadius: 35,
+    marginBottom: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10
   },
   bodyProfile: {
-    width: 40,
-    height: 40,
-    borderRadius: 40 / 2,
-    display: 'flex',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    paddingTop: 10
+    width: 50,
+    height: 50,
+    display: "flex",
+    justifyContent: "center",
+    alignSelf: "center",
+    paddingLeft: 10,
+    borderRadius: 25
   },
-  bodyTitle: {
-    width: 300,
-    height: 60,
-    display: 'flex',
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
+  bodyTextClient: {
+    color: "white",
+    fontSize: 20,
     marginLeft: 20,
+    marginBottom: 8
   },
-  bodyText: {
-    color: '#e2e2e3',
-    display:'flex',
-    justifyContent:'center',
-    alignSelf:'flex-start',
-    marginTop:10
+  bodyTextMessage: {
+    color: "white",
+    fontSize: 16,
+    marginLeft: 20
   },
-  timeBody:{
-    width:150,
-    display: 'flex',
-    justifyContent: 'center',
-    alignSelf: 'center'
+  notFound: {
+    color: 'white',
+    fontSize: 15,
+    top: '10%',
+    alignSelf: 'center',
   },
-  time:{
+  timeContainer: {
+    right: 60,
+    position: 'absolute'
+  },
+  time: {
     color: '#e2e2e3',
   },
   NoConversation: {
@@ -142,15 +134,51 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     top: '90%',
     paddingTop: 15,
+    bottom: 0,
+    right: 0,
     position: 'absolute',
-    alignSelf: 'flex-end',
+    marginHorizontal: 5,
+    marginVertical: -5
   },
   BottomProfile: {
     width: 50,
     height: 50,
     left: 10,
     alignItems: 'center',
-  }
+  },
+  archive: {
+    top: 10,
+    right: 10,
+    position: 'absolute'
+  },
+  archiveicon: {
+    height: 50,
+    width: 50
+  },
+  archiveContainer: {
+    display: 'flex',
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  archiveBottomIcon: {
+    width: 30,
+    height: 30,
+    marginTop: 10
+  },
+  textArchive: {
+    color: 'white',
+    fontSize: 16,
+    top: "0.6%",
+    marginLeft: 10,
+    marginTop: 10
+  },
+  messageOptions: {
+    fontSize: 22,
+    color: 'white',
+    right: 20,
+    position: 'absolute'
+  },
 });
 
 class ChatScreen extends Component {
@@ -162,23 +190,22 @@ class ChatScreen extends Component {
       isSearch: false,
       searchValue: '',
       searchData: [],
-      usernames: [],
     };
   }
   componentDidMount() {
-    this.getContacts();
+    this.getConversations();
   }
-  getContacts = () => {
+  getConversations = () => {
     axios
       .request({
-        method: 'POST',
+        method: "POST",
         url: `https://ptchatindia.herokuapp.com/conversations`,
         headers: {
           authorization: this.props.user.token,
         },
         data: {
           username: this.props.user.username,
-          is_archive: 0,
+          is_archive: 0
         },
       })
       .then(res => {
@@ -187,8 +214,8 @@ class ChatScreen extends Component {
             let details = [], usernames = [];
             res.data.data.map(user => {
               if (user.username !== this.props.user.username) {
+                Object.assign(user, { popUp: false })
                 details.push(user);
-                usernames.push(user.client);
               }
             });
             this.setState({ Data: details, usernames: usernames });
@@ -197,8 +224,30 @@ class ChatScreen extends Component {
             this.setState({ isEmpty: true });
           }
         }
-      });
+      })
   };
+
+  onArcheive = (id) => {
+    axios
+      .request({
+        method: "POST",
+        url: 'https://ptchatindia.herokuapp.com/archive',
+        headers: {
+          authorization: this.props.user.token
+        },
+        data: {
+          username: this.props.user.username,
+          roomIds: [id]
+        }
+      }).then((res) => {
+        this.setState({});
+      }).catch((error) => console.log(error))
+  }
+
+  ToArchivedMsgs = () => {
+    this.props.navigation.navigate('archive');
+  }
+
   onContactClick = () => {
     this.props.navigation.navigate('contacts');
   }
@@ -207,9 +256,9 @@ class ChatScreen extends Component {
     let ampm = date.getHours() >= 12 ? 'pm' : 'am';
     let hours = date.getHours() >= 12 ? date.getHours() - 12 : date.getHours();
     return hours + ":" + date.getMinutes() + ampm;
-}
+  }
 
-getDurationByTimestamp = (timestamp) => {
+  getDurationByTimestamp = (timestamp) => {
     let date = new Date(timestamp * 1000);
     let days = (new Date() - new Date(date.getFullYear(), date.getMonth(), date.getDate())) / (1000 * 60 * 60 * 24);
     days = Math.floor(days);
@@ -228,10 +277,10 @@ getDurationByTimestamp = (timestamp) => {
   }
   searchConversations = (data) => {
     let searchData = [];
-    let usernames = this.state.usernames;
+    let conversationData = this.state.Data;
     if (data.length > 0) {
-      searchData = usernames.filter((result) => {
-        return result.username.toLowerCase().includes(data.toLowerCase())
+      searchData = conversationData.filter((result) => {
+        return result.client.username.toLowerCase().includes(data.toLowerCase())
       })
     }
     this.setState({ searchData: searchData });
@@ -240,7 +289,7 @@ getDurationByTimestamp = (timestamp) => {
   searchVisible = () => {
     this.setState({
       searchValue: '',
-      searchData: [] ,
+      searchData: [],
       isSearch: this.state.isSearch ? false : true,
     });
   }
@@ -248,36 +297,64 @@ getDurationByTimestamp = (timestamp) => {
   onConversationClick = (user) => {
     this.props.createClient(user);
     this.props.navigation.navigate('chatRoom');
-}
+  }
 
   render() {
     return (
       <View style={styles.dark}>
         <View style={styles.header}>
-          <View style={styles.headerTitle}>
-            <Image
-              style={styles.headerProfile}
-              source={{ uri: this.props.user.profile, }} />
-            <Text style={styles.headerText}>Conversations</Text>
-          </View>
-          <View style={styles.headerSearch}>
-            {this.state.isSearch &&
-              <TextInput placeholder="Search Here..." placeholderTextColor='white' style={styles.headerInput} value={this.state.searchValue}
-               onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }} />}
-          </View>
-          <View style={styles.headerMenu}>
-            <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
-            <Image style={styles.menu} source={MenuButton} />
-          </View>
+          <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
+          <Text style={styles.headerText}>Conversations</Text>
+          {this.state.isSearch &&
+            <TextInput
+              placeholder="Search Here..."
+              placeholderTextColor='white'
+              style={styles.headerInput}
+              value={this.state.searchValue}
+              onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
+            />
+          }
+          <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
+          <Text style={styles.headerMenu} >...</Text>
         </View>
-        <ScrollView>
-          {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
+        {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
+        <ScrollView style={styles.scrollViewContainer}>
           {this.state.searchValue.length === 0 ?
-            this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
+            <View>
+              {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
+                return (
+                  <View key={index}>
+                    {user.client && user.latest &&
+                      <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
+                        <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
+                        <View>
+                          <Text style={styles.bodyTextClient}>{user.client.username}</Text>
+                          <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                        </View>
+                        <View style={styles.timeContainer}>
+                          {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
+                          {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
+                        </View>
+                        <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                        <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
+                          <Image style={styles.archiveicon} source={ArchiveIcon} />
+                        </TouchableOpacity>
+                      </TouchableOpacity>
+                    }
+                  </View>
+                );
+              })}
+              <TouchableOpacity style={styles.archiveContainer} onPress={() => { this.ToArchivedMsgs() }}>
+                <Image style={styles.archiveBottomIcon} source={ArchiveIcon} />
+                <Text style={styles.textArchive}>Archived Messages</Text>
+              </TouchableOpacity>
+            </View>
+            : null}
+          {this.state.searchData.length !== 0 ?
+            this.state.searchData.map((user, index) => {
               return (
                 <View key={index} style={styles.body}>
-                  <TouchableOpacity onPress={()=>{this.onConversationClick(user)}}>
-                  <View style={styles.containerBody} >
+                  <View style={styles.containerBody}>
                     <Image
                       style={styles.bodyProfile}
                       source={{
@@ -287,33 +364,11 @@ getDurationByTimestamp = (timestamp) => {
                   </View>
                   <View style={styles.bodyTitle}>
                     <Text style={styles.bodyText}>{user.client.username}</Text>
-                    <Text style={styles.bodyText}>{user.latest.message}</Text>
-                    </View>
-                  <View style={styles.timeBody}>
-                    <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}{' ' + this.getDurationByTimestamp(user.latest.timestamp)}</Text>
-                  </View>
-                  </TouchableOpacity>
-                </View>
-              );
-            }) : null}
-          {this.state.searchData.length !== 0 ?
-            this.state.searchData.map((user, index) => {
-              return (
-                <View key={index} style={styles.body}>
-                  <View style={styles.containerBody}>
-                    <Image
-                      style={styles.bodyProfile}
-                      source={{
-                        uri: user.profile,
-                      }}
-                    />
-                  </View>
-                  <View style={styles.bodyTitle}>
-                    <Text style={styles.bodyText}>{user.username}</Text>
                   </View>
                 </View>
               )
-            }) : (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
+            }) :
+            (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
               <Text style={styles.notFound}>Not Found</Text> : null}
         </ScrollView>
         <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>

@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView,TouchableOpacity} from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import axios from "axios";
 import { connect } from "react-redux";
 import { createClient } from '../../actions/actions';
+import { Dimensions } from 'react-native';
+
+const { screenHeight, screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     dark: {
@@ -11,82 +14,72 @@ const styles = StyleSheet.create({
     },
     header: {
         display: "flex",
-        justifyContent: "center",
-        alignSelf: "center",
+        width: screenWidth,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
         flexDirection: "row",
-        backgroundColor: "#202124"
+        backgroundColor: "#373a3f",
+        paddingHorizontal: 10,
+        paddingVertical: 15
     },
     headerProfile: {
-        width: 40,
-        height: 40,
+        width: 50,
+        height: 50,
         display: "flex",
         justifyContent: "center",
         alignSelf: "center",
-        borderRadius: 60 / 2
-
-    },
-    headerSingleProfile: {
-        width: 40,
-        height: 40,
-        display: "flex",
-        justifyContent: "center",
-        alignSelf: "center",
-        paddingLeft: 10,
-        borderRadius: 40 / 2
-    },
-    headerTitle: {
-        width: 300,
-        height: 60,
-        display: "flex",
-        justifyContent: "center",
-        alignSelf: "flex-start",
-        marginLeft: 20
+        borderRadius: 25
     },
     headerText: {
         color: "white",
+        fontSize: 22,
+        marginLeft: 15
+    },
+    headerMenu: {
+        textAlign: 'right',
+        color: 'white',
+        alignSelf: 'center',
+        fontSize: 24,
+        right: 10,
+        position: 'absolute'
+    },
+    scrollViewContainer: {
+        height: screenHeight,
+        width: screenWidth,
+        paddingHorizontal: 15,
+        paddingVertical: 10
     },
     body: {
         display: "flex",
-        justifyContent: "center",
-        alignSelf: "center",
+        width: screenWidth,
+        height: 60,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
         flexDirection: "row",
         backgroundColor: "#383a3f",
         borderRadius: 15,
-        marginTop: 10
-    },
-    headerMenu: {
-        width: 40,
-        height: 60,
-        display: "flex",
-        justifyContent: "center",
-        alignSelf: "center",
+        marginBottom: 10,
+        paddingVertical: 5,
+        paddingHorizontal: 10
     },
     bodyProfile: {
         width: 40,
-        height: 60,
+        height: 40,
         display: "flex",
         justifyContent: "center",
-        alignSelf: "center"
-    },
-    bodyTitle: {
-        width: 300,
-        height: 60,
-        display: "flex",
-        alignSelf: "flex-start",
-        marginLeft: 20,
-        paddingTop: 18
+        alignSelf: "center",
+        paddingLeft: 10,
+        borderRadius: 20
     },
     bodyText: {
         color: "white",
-    },
-    profile_container: {
-        paddingLeft: 10,
-        paddingTop: 8
+        fontSize: 18,
+        marginLeft: 20
     },
     NoContacts: {
         color: 'white',
-        alignSelf: 'center',
-        paddingTop: 300
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 })
 
@@ -129,37 +122,23 @@ class Contacts extends Component {
         this.props.createClient(user);
         this.props.navigation.navigate('chatRoom');
     }
+
     render() {
         return (
             <View style={styles.dark}>
                 <View style={styles.header}>
-                    <View style={styles.profile_container}>
-                        <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
-                    </View>
-                    <View style={styles.headerTitle}>
-                        <Text style={styles.headerText}>Contacts</Text>
-                    </View>
-                    <View style={styles.headerMenu}>
-                        <Image source={{}} />
-                        <Text style={{ color: "white" }}>...</Text>
-                    </View>
+                    <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
+                    <Text style={styles.headerText}>Contacts</Text>
+                    <Text style={styles.headerMenu}>...</Text>
                 </View>
-                <ScrollView style={{ height: 100 }}>
-                    {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
+                {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
+                <ScrollView style={styles.scrollViewContainer}>
                     {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
                         return (
-                            <View key={index}>
-                                <View style={styles.body}>
-                                    <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick(user) }}>
-                                        <View style={styles.profile_container}>
-                                            <Image style={styles.headerSingleProfile} source={{ uri: user.profile }} />
-                                        </View>
-                                        <View style={styles.bodyTitle}>
-                                            <Text style={styles.bodyText}>{user.username}</Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
+                            <TouchableOpacity key={index} style={styles.body} onPress={() => { this.onContactClick(user) }}>
+                                <Image style={styles.bodyProfile} source={{ uri: user.profile }} />
+                                <Text style={styles.bodyText}>{user.username}</Text>
+                            </TouchableOpacity>
                         );
                     })}
                 </ScrollView>
