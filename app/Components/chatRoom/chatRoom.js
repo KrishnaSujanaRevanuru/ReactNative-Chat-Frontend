@@ -191,20 +191,16 @@ class ChatRoom extends Component {
                     }
                   </>
                 ) : (
-                  <>
-                    {message.is_delete !== 1 &&
-                      <View style={styles.msg_field_container}>
-                        <View style={styles.msg_left}>
-                          <Text style={styles.message} >{message.message}</Text>
-                          <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
-                        </View>
-                        <Text style={styles.msg_time_left}>
-                          {this.getTimeByTimestamp(message.timestamp)}
-                        </Text>
-                        <View>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"left message"} callBack={this.setMsgPopToFalse} /> : null}</View>
-                      </View>
-                    }
-                  </>
+                  <View style={styles.msg_field_container}>
+                    <View style={styles.msg_left}>
+                      <Text style={styles.message} >{message.message}</Text>
+                      <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                    </View>
+                    <Text style={styles.msg_time_left}>
+                      {this.getTimeByTimestamp(message.timestamp)}
+                    </Text>
+                    <View>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"left message"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                  </View>
                 )}
               </View>
             );
@@ -331,7 +327,7 @@ const styles = StyleSheet.create({
 
   footer: {
     display: "flex",
-    width: "97%",
+    width: "95%",
     justifyContent: 'flex-start',
     alignItems: 'center',
     flexDirection: "row",
