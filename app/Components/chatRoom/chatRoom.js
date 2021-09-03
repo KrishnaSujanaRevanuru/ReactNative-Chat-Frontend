@@ -1,21 +1,22 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import io from 'socket.io-client';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 import EmojiSelector, { Categories } from 'react-native-emoji-selector';
 import {
   ScrollView,
   Text,
   StyleSheet,
   View,
-  Pressable,
   Image,
   TextInput,
-  TouchableOpacity
+  TouchableOpacity,
 } from 'react-native';
-import MenuButton from '../../../assests/horizontalDots.png';
 import MessagePop from './messagePop';
-import EmojiAdd from '../../../assests/emoji-add-icon.png'
+import EmojiAdd from '../../../assests/emoji-add-icon.png';
+import SendButton from '../../../assests/send.png';
+import { Dimensions } from 'react-native';
 
+const { screenHeight, screenWidth } = Dimensions.get('window');
 class ChatRoom extends Component {
   constructor(props) {
     super(props);
@@ -24,7 +25,7 @@ class ChatRoom extends Component {
       message: '',
       messages: [],
       isOponentTyping: false,
-      showEmoji:false
+      showEmoji: false
       // MessagePopUp:false
     };
   }
@@ -52,20 +53,20 @@ class ChatRoom extends Component {
 
   onTyping = data => {
     if (this.props.user.username !== data.username) {
-      this.setState({isOponentTyping: data.typing});
+      this.setState({ isOponentTyping: data.typing });
     }
   };
 
   onMessage = data => {
     let messages = this.state.messages;
-    Object.assign(data, {messagePopUp: false});
+    Object.assign(data, { messagePopUp: false });
     messages.push(data);
     this.previousDate = null;
-    this.setState({messages: messages});
+    this.setState({ messages: messages });
   };
 
   onMessages = data => {
-    this.setState({messages: data.messages});
+    this.setState({ messages: data.messages });
     this.socket.off('messages', true);
   };
 
@@ -90,24 +91,24 @@ class ChatRoom extends Component {
         client2: this.props.client.username,
         message: this.state.chatMessage,
       });
-      this.setState({chatMessage: ""});
+      this.setState({ chatMessage: "" });
     }
   };
 
-    onShowEmoji = () => {
-        this.setState({ showEmoji: !this.state.showEmoji });
-    }
+  onShowEmoji = () => {
+    this.setState({ showEmoji: !this.state.showEmoji });
+  }
 
-    addEmoji = (emoji) => {
-        this.setState({ message: this.state.message + emoji })
-    }
+  addEmoji = (emoji) => {
+    this.setState({ chatMessage: this.state.chatMessage + emoji })
+  }
 
-    handleText = (msg) => {
-        this.setState({ message: msg,chatMessage:msg })
-    }
+  handleText = (msg) => {
+    this.setState({ chatMessage: msg })
+  }
 
   getTimeByTimestamp = timestamp => {
-    let date = new Date(timestamp * 1000); 
+    let date = new Date(timestamp * 1000);
     let ampm = date.getHours() >= 12 ? 'pm' : 'am';
     let hours = date.getHours() >= 12 ? date.getHours() - 12 : date.getHours();
     return hours + ':' + date.getMinutes() + ampm;
@@ -141,97 +142,88 @@ class ChatRoom extends Component {
     }
   };
 
-  messagePopUp = index => {
+  messagePopUp = (messageObj) => {
     let messages = this.state.messages;
-    messages[index].messagePopUp = messages[index].messagePopUp ? false : true;
-    this.setState({messages: messages});
+    for (let i = 0; i < messages.length; i++) {
+      if (messages[i].id !== messageObj.id)
+        messages[i].messagePopUp = false;
+      else messages[i].messagePopUp = messages[i].messagePopUp ? false : true;
+    }
+    this.setState({ messages: messages });
   };
 
+  setMsgPopToFalse = (msgObj) => {
+    let messages = this.state.messages;
+    for (let i = 0; i < messages.length; i++) messages[i].messagePopUp = false;
+    this.setState({ messages: messages }, () => {
+      this.socket.emit('delete', { username: this.props.user.username, client: this.props.client.username, messageId: msgObj.id })
+      this.socket.once('messages', this.onMessages);
+    })
+  }
+
   render() {
-    const {messages} = this.state;
+    const { messages } = this.state;
     return (
       <View style={styles.chat_room}>
         <View style={styles.header}>
-          <View>
-            <Image
-              style={styles.headerProfile}
-              source={{uri: this.props.user.profile}}
-            />
-          </View>
-          <View style={styles.headerTitle}>
-            <Text style={styles.headerText}>{this.props.client.username}</Text>
-          </View>
-          <View style={styles.headerMenu}>
-            <Image style={styles.menu} source={MenuButton} />
-          </View>
+          <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
+          <Text style={styles.headerText}>{this.props.client.username}</Text>
+          <Text style={styles.headerMenu}>...</Text>
         </View>
-        <ScrollView contentContainerStyle={styles.msg_container}>
-        {this.state.showEmoji &&
-                <View style={styles.emojiContainer}>
-                    <EmojiSelector
-                        onEmojiSelected={(emoji) => { this.addEmoji(emoji) }}
-                        showTabs={true}
-                        showSearchBar={false}
-                        showHistory={true}
-                        showSectionTitles={true}
-                        category={Categories.all}
-                    />
-                </View>
-        }
-          {messages &&
-            !!messages.length &&
-            messages.map((message, index) => {
-              return (
-                <View style={styles.message_field} key={index}>
-                  {this.getDateByTimestamp(message.timestamp)}
-                  {message.username === this.props.user.username ? (
-                    <View>
+        <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+          {messages && !!messages.length && messages.map((message, index) => {
+            return (
+              <View style={styles.message_field} key={index}>
+                {this.getDateByTimestamp(message.timestamp)}
+                {message.username === this.props.user.username ? (
+                  <>
+                    {message.is_delete !== 1 &&
                       <View style={styles.msg_field_container}>
-
-                        <View>
-                        <Text style={styles.msg_right} onPress={() => this.messagePopUp(index)} >{message.message}</Text>
-                            {/* <Text onPress={() => this.messagePopUp(index)} >:</Text> */}
-                          </View>
+                        <View style={styles.msg_right}>
+                          <Text style={styles.message}>{message.message}</Text>
+                          <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                        </View>
                         <Text style={styles.msg_time_right}>
                           {this.getTimeByTimestamp(message.timestamp)}
                         </Text>
-                        <View>{message.messagePopUp ? <MessagePop /> : null}</View>
+                        <View>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"right message"} callBack={this.setMsgPopToFalse} /> : null}</View>
                       </View>
-                    </View>
-                  ) : (
-                    <View>
-                      <Text style={styles.msg_left}>{message.message}</Text>
-                      <Text style={styles.msg_time_left}>
-                        {this.getTimeByTimestamp(message.timestamp)}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              );
-            })}
+                    }
+                  </>
+                ) : (
+                  <>
+                    {message.is_delete !== 1 &&
+                      <View style={styles.msg_field_container}>
+                        <View style={styles.msg_left}>
+                          <Text style={styles.message} >{message.message}</Text>
+                          <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                        </View>
+                        <Text style={styles.msg_time_left}>
+                          {this.getTimeByTimestamp(message.timestamp)}
+                        </Text>
+                        <View>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"left message"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                      </View>
+                    }
+                  </>
+                )}
+              </View>
+            );
+          })}
         </ScrollView>
         <View style={styles.footer}>
-          <View >
-          <TouchableOpacity style={styles.emojiview} onPress={() => { this.onShowEmoji() }}>
-                        <Image style={styles.emojiadd} source={EmojiAdd} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.message_input}>
-            <TextInput
-              style={styles.input}
-              placeholder="Type a Message"
-              placeholderTextColor="white"
-              value={this.state.chatMessage}
-              value={this.state.message}
-              onChangeText={(msg) => { this.handleText(msg) }}
-              
-            />
-          </View>
-          <View style={styles.submit_button}>
-            <Pressable onPress={() => this.send()}>
-              <Text style={styles.text}>Send</Text>
-            </Pressable>
-          </View>
+          <TouchableOpacity style={styles.emoji_view} onPress={() => { this.onShowEmoji() }}>
+            <Image style={styles.emoji_add} source={EmojiAdd} />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.message_input}
+            placeholder="Type a Message"
+            placeholderTextColor="white"
+            value={this.state.chatMessage}
+            onChangeText={(msg) => { this.handleText(msg) }}
+          />
+          <TouchableOpacity onPress={() => this.send()} style={styles.send_btn}>
+            <Image style={styles.message_send} source={SendButton} />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -241,63 +233,44 @@ class ChatRoom extends Component {
 const styles = StyleSheet.create({
   chat_room: {
     height: '100%',
-    width: '100%',
-    flex: 1,
     backgroundColor: '#202124',
   },
   header: {
-    height: '10%',
-    alignSelf: 'center',
-    flexDirection: 'row',
-    backgroundColor: '#202124',
-    paddingTop: 10,
+    display: "flex",
+    width: screenWidth,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexDirection: "row",
+    backgroundColor: "#373a3f",
+    paddingHorizontal: 10,
+    paddingVertical: 15
   },
   headerProfile: {
-    marginLeft: '5%',
     width: 50,
-    height: '90%',
-    borderRadius: 30,
-    alignSelf: 'center',
-  },
-  headerTitle: {
-    width: 260,
-    height: '90%',
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
-    marginLeft: 20,
+    height: 50,
+    display: "flex",
+    justifyContent: "center",
+    alignSelf: "center",
+    borderRadius: 25
   },
   headerText: {
-    color: 'white',
+    color: "white",
+    fontSize: 22,
+    marginLeft: 15
   },
   headerMenu: {
-    width: 40,
-    height: 60,
-    display: 'flex',
-    justifyContent: 'center',
+    textAlign: 'right',
+    color: 'white',
     alignSelf: 'center',
+    fontSize: 24,
+    right: 10,
+    position: 'absolute'
   },
-  menu: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#383a3f',
-    borderRadius: 20,
-    left: '10%',
-  },
-  msg_container: {
-    flex: 1,
-    width: '90%',
-    height: '100%',
-    backgroundColor: '#383a3f',
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
-    marginLeft: '5%',
-    borderTopRightRadius: 20,
-    borderTopLeftRadius: 20,
-  },
-  msg_field_container:{
-    // width: '10%',
-    // backgroundColor: 'white',
-    // height: '20%',
+  scrollViewContainer: {
+    height: screenHeight,
+    width: screenWidth,
+    paddingHorizontal: 15,
+    paddingVertical: 10
   },
   chatroom_date: {
     alignSelf: 'center',
@@ -305,32 +278,30 @@ const styles = StyleSheet.create({
     padding: '2%',
     marginBottom: '5%',
   },
-  emojiview: {
-    top: '9%',
-    left: '5%'
-},
-emojiadd: {
-    height: 30,
-    width: 30
-},
   msg_right: {
     color: 'white',
-    fontSize: 16,
+    display: 'flex',
+    flexDirection: 'row',
     alignSelf: 'flex-end',
-    backgroundColor: '#8a8787',
-    fontWeight: 'bold',
+    backgroundColor: '#8E1FC4',
     padding: '2%',
     marginTop: '5%',
     marginBottom: '1%',
     marginRight: '2%',
-    borderRadius: 6,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 0,
   },
-
+  message: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+  },
   msg_time_right: {
     color: 'white',
     alignSelf: 'flex-end',
     marginRight: '3%',
-    // backgroundColor: "#8a8787",
   },
   msg_time_left: {
     color: 'white',
@@ -341,32 +312,40 @@ emojiadd: {
     height: '60%',
     width: '100%',
     position: 'absolute'
-    },
+  },
   msg_left: {
     color: 'white',
-    fontSize: 16,
     alignSelf: 'flex-start',
-    fontWeight: 'bold',
     backgroundColor: '#8a8787',
+    display: 'flex',
+    flexDirection: 'row',
     padding: '2%',
     marginTop: '5%',
     marginBottom: '1%',
     marginLeft: '3%',
-    borderRadius: 6,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 30,
   },
 
   footer: {
-    width: '90%',
-    height: '20%',
-    bottom: 10,
-    top: 0.8,
-    flexDirection: 'row',
+    display: "flex",
+    width: "97%",
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     backgroundColor: '#373a3f',
-    marginLeft: '5%',
-    marginBottom: '5%',
-    borderRadius: 20,
-    borderTopRightRadius: 1,
-    borderTopLeftRadius: 1,
+    borderRadius: 50,
+    bottom: 10,
+    right: 5,
+    position: 'absolute',
+  },
+  emoji_add: {
+    height: 30,
+    width: 30,
   },
   emoji: {
     width: '9%',
@@ -382,28 +361,26 @@ emojiadd: {
   message_input: {
     height: '100%',
     width: '70%',
-  },
-
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    width: '90%',
-    height: '50%',
-    backgroundColor: 'rgba(0,0,0,.25)',
-    fontWeight: 'bold',
+    borderRadius: 15,
+    marginLeft: '6%',
     alignSelf: 'center',
     color: 'white',
-    marginTop: 30,
+    fontSize: 15,
+    backgroundColor: 'rgba(0,0,0,.25)',
   },
-
-  submit_button: {
-    height: '50%',
-    width: '18%',
-    justifyContent: 'center',
-    alignItems: 'center',
+  send_btn: {
+    backgroundColor: '#3273E5',
+    height: 40,
+    width: 40,
     borderRadius: 20,
-    backgroundColor: '#7652bf',
-    marginTop: 30,
+    position: 'absolute',
+    padding: '15%',
+    right: 10,
+  },
+  message_send: {
+    height: 30,
+    width: 30,
+
   },
   text: {
     fontSize: 16,
@@ -414,6 +391,14 @@ emojiadd: {
     color: 'white',
     fontSize: 16,
   },
+  messageOptions: {
+    fontSize: 15,
+    color: 'white',
+    marginLeft: 5,
+  },
+  messagePopUp: {
+    alignSelf: 'flex-start'
+  }
 });
 
 const mapStateToProps = state => (

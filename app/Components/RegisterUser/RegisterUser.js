@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button,  ScrollView, Image} from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Button, ScrollView, Image } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { submitRegister } from '../../actions/actions';
@@ -83,17 +83,22 @@ class Registration extends React.Component {
                 }).catch(error => console.log(error));
         }
     }
+
+    onLoginClick = () => {
+        this.props.navigation.navigate('login');
+    }
+
     pickImage = () => {
         const Options = {
             maxWidth: 40,
             maxHeight: 40
         }
         launchImageLibrary(Options, (response) => {
-            let errors="";
+            let errors = "";
             if (response.didCancel) {
-                errors="";
+                errors = "";
             }
-           else if (response.assets && response.assets[0].uri.type !== "image/jpeg") {
+            else if (response.assets && response.assets[0].uri.type !== "image/jpeg") {
                 if (response.assets && response.assets[0].fileSize > 3072) {
                     errors = "selected image size more than 3MB";
                     this.setState({ imageError: errors });
@@ -141,6 +146,7 @@ class Registration extends React.Component {
                             </Text>
                             <Text style={styles.image_warning} >{this.state.imageError && this.state.imageError}</Text>
                             <Button title="SUBMIT" color='purple' style={styles.button} onPress={() => this.Submit()} />
+                            <Text style={styles.loginText} onPress={() => { this.onLoginClick() }}>Login</Text>
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -170,7 +176,6 @@ const styles = StyleSheet.create({
     bg_color: {
         backgroundColor: '#202124',
         height: 780,
-
     },
     container: {
         display: "flex",
@@ -183,7 +188,7 @@ const styles = StyleSheet.create({
         padding: 60,
         borderRadius: 30,
         marginTop: 120,
-        height: 500
+        height: 530
     },
     input: {
         alignSelf: 'center',
@@ -212,11 +217,16 @@ const styles = StyleSheet.create({
         height: 40,
         width: 40
     },
-    image_warning:{
-        color:"red"
+    image_warning: {
+        color: "red"
+    },
+    loginText: {
+        marginTop: 10,
+        color: 'white',
+        marginLeft: "40%"
     }
 });
-const mapStateToProps = (state) => ( {
+const mapStateToProps = (state) => ({
     userDetails: state,
 });
 

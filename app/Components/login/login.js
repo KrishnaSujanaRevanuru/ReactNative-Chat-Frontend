@@ -21,8 +21,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 30
+    alignSelf: 'center'
   },
   text: {
     color: '#cac3c3',
@@ -46,7 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 0,
     width: 150,
-    borderRadius:5
+    borderRadius: 5
   },
   field: {
     margin: 20,
@@ -118,6 +117,7 @@ class Login extends Component {
           }
         })
         .catch((err) => {
+          console.log(err);
           this.setState({ failedLogin: !this.failedLogin });
         });
     }
