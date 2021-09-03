@@ -193,7 +193,7 @@ class ChatScreen extends Component {
     };
   }
   componentDidMount() {
-    this.getConversations();
+    this.focusListener = this.props.navigation.addListener("focus",()=>this.getConversations());
   }
   getConversations = () => {
     axios
@@ -240,7 +240,7 @@ class ChatScreen extends Component {
           roomIds: [id]
         }
       }).then((res) => {
-        this.setState({});
+        this.setState({},()=>this.getConversations());
       }).catch((error) => console.log(error))
   }
 
