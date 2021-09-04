@@ -193,6 +193,7 @@ class ChatScreen extends Component {
     };
   }
   componentDidMount() {
+    this.getConversations();
     this.focusListener = this.props.navigation.addListener("focus",()=>this.getConversations());
   }
   getConversations = () => {
@@ -278,7 +279,7 @@ class ChatScreen extends Component {
   searchConversations = (data) => {
     let searchData = [];
     let conversationData = this.state.Data;
-    if (data.length > 0) {
+    if (conversationData && data.length > 0) {
       searchData = conversationData.filter((result) => {
         return result.client.username.toLowerCase().includes(data.toLowerCase())
       })

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import io from 'socket.io-client';
 import { connect } from 'react-redux';
-import EmojiSelector, { Categories } from 'react-native-emoji-selector';
 import {
   ScrollView,
   Text,
@@ -10,11 +9,12 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
+  Keyboard
 } from 'react-native';
 import MessagePop from './messagePop';
-import EmojiAdd from '../../../assests/emoji-add-icon.png';
 import SendButton from '../../../assests/send.png';
 import { Dimensions } from 'react-native';
+import EmojiSelector, { Categories } from 'react-native-emoji-selector';
 
 const { screenHeight, screenWidth } = Dimensions.get('window');
 class ChatRoom extends Component {
@@ -25,7 +25,9 @@ class ChatRoom extends Component {
       message: '',
       messages: [],
       isOponentTyping: false,
-      showEmoji: false
+      showEmoji: false,
+      reactionData: {},
+      tempReaction: false
     };
   }
   socket = null;
@@ -90,7 +92,7 @@ class ChatRoom extends Component {
         client2: this.props.client.username,
         message: this.state.chatMessage,
       });
-      this.setState({ chatMessage: "" });
+      this.setState({ chatMessage: "",showEmoji: false  });
     }
   };
 
@@ -99,7 +101,11 @@ class ChatRoom extends Component {
   }
 
   addEmoji = (emoji) => {
-    this.setState({ chatMessage: this.state.chatMessage + emoji })
+    if (this.state.showEmoji && this.state.tempReaction) {
+      this.userReaction(emoji, this.state.reactionData)
+    }
+    else
+      this.setState({ chatMessage: this.state.chatMessage + emoji })
   }
 
   handleText = (msg) => {
@@ -159,12 +165,30 @@ class ChatRoom extends Component {
       this.socket.once('messages', this.onMessages);
     })
   }
+  handleReaction = (obj) => {
+    if (this.state.showEmoji === false) {
+      this.setState({ reactionData: obj, showEmoji: true, tempReaction: true });
+    }
+    else if (this.state.showEmoji === true) {
+      this.setState({ showEmoji: false })
+    }
+  }
+  removeReaction = (obj) => {
+    this.socket.emit("reaction", { username: this.props.user.username, client: this.props.client.username, messageId: obj.id })
+    this.socket.once('messages', this.onMessages);
+  }
+  userReaction = (reaction, obj) => {
+    this.socket.emit("reaction", { username: this.props.user.username, client: this.props.client.username, messageId: obj.id, reaction: reaction })
+    this.socket.once('messages', this.onMessages);
+    this.setState({ reactionData: {}, showEmoji: false, tempReaction: false });
+  }
 
   render() {
     const { messages } = this.state;
     return (
       <View style={styles.chat_room}>
         <View style={styles.header}>
+          <Text style={styles.back_arrow} onPress={()=>{this.props.navigation.goBack()}}>&#8592;</Text>
           <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
           <Text style={styles.headerText}>{this.props.client.username}</Text>
           <Text style={styles.headerMenu}>...</Text>
@@ -177,37 +201,41 @@ class ChatRoom extends Component {
                 {message.username === this.props.user.username ? (
                   <>
                     {message.is_delete !== 1 &&
-                      <View style={styles.msg_field_container}>
+                      <View>
                         <View style={styles.msg_right}>
                           <Text style={styles.message}>{message.message}</Text>
                           <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                          {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} style={styles.msg_right_reaction}><Text style={{ marginLeft: "3%" }}>{message.reaction}</Text></TouchableOpacity>}
                         </View>
                         <Text style={styles.msg_time_right}>
                           {this.getTimeByTimestamp(message.timestamp)}
                         </Text>
-                        <View>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"right message"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
                       </View>
                     }
                   </>
                 ) : (
+                  <>
+                    {message.is_delete !== 1 &&
                   <View style={styles.msg_field_container}>
                     <View style={styles.msg_left}>
-                      <Text style={styles.message} >{message.message}</Text>
+                      <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}  >{message.message}</Text>
                       <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
                     </View>
+                    {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} ><Text style={styles.msg_left_reaction}>{message.reaction}</Text></TouchableOpacity>}
                     <Text style={styles.msg_time_left}>
                       {this.getTimeByTimestamp(message.timestamp)}
                     </Text>
-                    <View>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"left message"} callBack={this.setMsgPopToFalse} /> : null}</View>
-                  </View>
-                )}
+                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                  </View>}
+                </>)}
               </View>
             );
           })}
         </ScrollView>
         <View style={styles.footer}>
           <TouchableOpacity style={styles.emoji_view} onPress={() => { this.onShowEmoji() }}>
-            <Image style={styles.emoji_add} source={EmojiAdd} />
+            <Text style={styles.emoji_add}>&#9787;</Text>
           </TouchableOpacity>
           <TextInput
             style={styles.message_input}
@@ -215,11 +243,26 @@ class ChatRoom extends Component {
             placeholderTextColor="white"
             value={this.state.chatMessage}
             onChangeText={(msg) => { this.handleText(msg) }}
-          />
+            onFocus={() => { this.setState({ showEmoji: false }) }}
+         />
           <TouchableOpacity onPress={() => this.send()} style={styles.send_btn}>
             <Image style={styles.message_send} source={SendButton} />
           </TouchableOpacity>
         </View>
+        {this.state.showEmoji &&
+          <View style={styles.emojiContainer} onPress={Keyboard.dismiss()}>
+            <EmojiSelector
+              onEmojiSelected={(emoji) => { this.addEmoji(emoji) }}
+              showTabs={true}
+              showSearchBar={false}
+              showHistory={true}
+              showSectionTitles={true}
+              category={Categories.all}
+              columns={10}
+            />
+          </View>
+        }
+
       </View>
     );
   }
@@ -304,9 +347,10 @@ const styles = StyleSheet.create({
     marginLeft: '3%',
   },
   emojiContainer: {
-    height: '60%',
+    height: '50%',
     width: '100%',
-    position: 'absolute'
+    backgroundColor: '#BFC2C6',
+    // position: 'absolute'
   },
   msg_left: {
     color: 'white',
@@ -338,8 +382,9 @@ const styles = StyleSheet.create({
     bottom: '1%',
   },
   emoji_add: {
-    height: 30,
-    width: 30,
+    color: 'gray',
+    fontWeight: 'bold',
+    fontSize:32,
   },
   emoji: {
     width: '9%',
@@ -392,7 +437,37 @@ const styles = StyleSheet.create({
   },
   messagePopUp: {
     alignSelf: 'flex-start'
-  }
+  },
+  msg_right_reaction: {
+    marginTop: "-2%",
+    fontSize: 15,
+    backgroundColor: "#999A9B",
+    height: 30,
+    width: 30,
+    borderRadius: 15,
+    alignSelf: 'flex-end',
+    padding: '1.5%',
+    marginRight: '3%'
+  },
+  msg_left_reaction: {
+    marginTop: "-2%",
+    fontSize: 15,
+    backgroundColor: "#999A9B",
+    height: 30,
+    width: 30,
+    borderRadius: 15,
+    padding: '1.5%',
+    marginLeft: '3%'
+  },
+  back_arrow:{
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize:30,
+    height: 30,
+    width: 30,
+    marginBottom:27
+  },
+  popUp:{position:'absolute',alignSelf:'center'},
 });
 
 const mapStateToProps = state => (
