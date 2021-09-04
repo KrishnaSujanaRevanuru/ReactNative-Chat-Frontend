@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { userLogin } from '../../actions/actions';
+import PushNotification from "react-native-push-notification";
 import {
   View,
   Text,
@@ -78,6 +79,20 @@ class Login extends Component {
       isLoading: false
     };
   }
+
+  componentDidMount = () => {
+    this.createChannels();
+  }
+
+  createChannels = () => {
+    PushNotification.createChannel(
+      {
+        channelId: "test-channel",
+        channelName: "Test Channel"
+      }
+    )
+  }
+  
   validationForm = (val, check) => {
     if (check === 'user') {
       if (!val) {
