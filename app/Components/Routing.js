@@ -10,14 +10,14 @@ import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import Materialicons from 'react-native-vector-icons/MaterialIcons';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const TabNavigator = createBottomTabNavigator();
-
+const StackNav = createNativeStackNavigator();
 class Tab extends Component {
 
   render() {
     return (
-      <NavigationContainer>
         <TabNavigator.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ color, size }) => {
@@ -25,7 +25,6 @@ class Tab extends Component {
 
               if (route.name === 'chatScreen') iconName = 'home';
               else if (route.name === 'contacts') iconName = 'contacts';
-              else if (route.name === 'chatRoom') iconName = 'chat';
               else if (route.name === 'archive') iconName = 'archive';
               return <Materialicons name={iconName} size={size} color={color} />;
             },
@@ -39,11 +38,22 @@ class Tab extends Component {
         >
           <TabNavigator.Screen name="chatScreen" component={ChatScreen} options={{ header: () => null }} />
           <TabNavigator.Screen name="contacts" component={Contacts} options={{ header: () => null }} />
-          <TabNavigator.Screen name="chatRoom" component={ChatRoom} options={{ header: () => null }} />
           <TabNavigator.Screen name="archive" component={Archive} options={{ header: () => null }} />
         </TabNavigator.Navigator>
-      </NavigationContainer>
     );
+  }
+}
+
+class appScreen extends Component {
+  render() {
+    return (
+      <NavigationContainer>
+        <StackNav.Navigator initialRouteName='chatScreen'>
+          <StackNav.Screen name="chatScreen" component={Tab} options={{ header: () => null }} />
+          <StackNav.Screen name="chatRoom" component={ChatRoom} options={{ header: () => null }} />
+        </StackNav.Navigator>
+      </NavigationContainer>
+    )
   }
 }
 
@@ -59,7 +69,7 @@ const authenticateApp = createStackNavigator({
 
 const SwitchNavigator = createAppContainer(createSwitchNavigator({
   authenticateApp: authenticateApp,
-  appScreen: Tab,
+  appScreen: appScreen,
 
 },
   {

@@ -26,7 +26,6 @@ class ChatRoom extends Component {
       messages: [],
       isOponentTyping: false,
       showEmoji: false
-      // MessagePopUp:false
     };
   }
   socket = null;
@@ -38,7 +37,7 @@ class ChatRoom extends Component {
       username: this.props.user.username,
       client2: this.props.client.username,
     });
-    this.socket.once('messages', this.onMessages);
+    this.socket.on('messages', this.onMessages);
     this.socket.on('message', this.onMessage);
     this.socket.on('typing-start', this.onTyping);
     this.socket.on('typing-end', this.onTyping);
@@ -327,7 +326,7 @@ const styles = StyleSheet.create({
 
   footer: {
     display: "flex",
-    width: "95%",
+    width: '99%',
     justifyContent: 'flex-start',
     alignItems: 'center',
     flexDirection: "row",
@@ -335,9 +334,8 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     backgroundColor: '#373a3f',
     borderRadius: 50,
-    bottom: 10,
-    right: 5,
-    position: 'absolute',
+    left: '0.3%',
+    bottom: '1%',
   },
   emoji_add: {
     height: 30,

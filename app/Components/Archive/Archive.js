@@ -184,7 +184,7 @@ class ChatScreen extends Component {
         };
     }
     componentDidMount() {
-        this.getConversations();
+    this.focusListener = this.props.navigation.addListener("focus",()=>this.getConversations());
     }
     getConversations = () => {
         axios
@@ -221,7 +221,7 @@ class ChatScreen extends Component {
         axios
             .request({
                 method: "POST",
-                url: 'https://ptchatindia.herokuapp.com/archive',
+                url: `https://ptchatindia.herokuapp.com/remove_archive`,
                 headers: {
                     authorization: this.props.user.token
                 },
@@ -230,7 +230,8 @@ class ChatScreen extends Component {
                     roomIds: [id]
                 }
             }).then((res) => {
-                this.setState({});
+                
+                this.setState({},()=>this.getConversations());
             }).catch((error) => console.log(error))
     }
 

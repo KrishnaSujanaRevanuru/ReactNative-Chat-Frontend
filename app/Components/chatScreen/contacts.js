@@ -92,7 +92,7 @@ class Contacts extends Component {
         };
     }
     componentDidMount() {
-        this.getContacts();
+    this.focusListener = this.props.navigation.addListener("focus",()=>this.getContacts());
     }
     getContacts = () => {
         axios
