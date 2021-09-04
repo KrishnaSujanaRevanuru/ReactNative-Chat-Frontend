@@ -5,24 +5,15 @@ import { connect } from 'react-redux';
 const styles = StyleSheet.create({
     rightOptions: {
         backgroundColor: "#8a8787",
-        width: '40%',
-        height: '67%',
-        alignSelf: 'flex-end',
-        borderRadius: 15
-    },
-    leftOptions: {
-        backgroundColor: "#8a8787",
-        width: '40%',
-        height: '67%',
-        alignSelf: 'flex-start',
+        alignItems: 'center',
         borderRadius: 15
     },
     optionsMsgText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
-        marginTop: 5,
-        marginLeft: 15
+        marginTop: 2,
+        marginBottom: 2
     }
 })
 
@@ -38,21 +29,13 @@ class MessagePop extends Component {
         const optionPosition = this.props.optionsCategorey;
         return (
             <View>
-                {optionPosition === 'right message' ?
+                {optionPosition === 'mssgPopup' ?
                     < View style={styles.rightOptions} >
                         <TouchableOpacity><Text style={styles.optionsMsgText}>Reply</Text></TouchableOpacity>
                         <TouchableOpacity><Text style={styles.optionsMsgText}>Forward Message</Text></TouchableOpacity>
                         <TouchableOpacity onPress={() => { this.deleteMessage() }}><Text style={styles.optionsMsgText}>Delete Message</Text></TouchableOpacity>
                         <TouchableOpacity><Text style={styles.optionsMsgText}>Star Message</Text></TouchableOpacity>
-                    </View > :
-                    optionPosition === 'left message' ?
-                        < View style={styles.leftOptions} >
-                            <TouchableOpacity><Text style={styles.optionsMsgText}>Reply</Text></TouchableOpacity>
-                            <TouchableOpacity><Text style={styles.optionsMsgText}>Forward Message</Text></TouchableOpacity>
-                            <TouchableOpacity onPress={() => { this.deleteMessage() }}><Text style={styles.optionsMsgText}>Delete Message</Text></TouchableOpacity>
-                            <TouchableOpacity><Text style={styles.optionsMsgText}>Star Message</Text></TouchableOpacity>
-                        </View > : null
-                }
+                    </View > : null}
             </View>
         );
     }
@@ -66,4 +49,4 @@ const mapStateToProps = state => (
     }
 );
 
-export default connect(mapStateToProps, null)(MessagePop);
+export default connect(mapStateToProps, null)(MessagePop)
