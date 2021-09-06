@@ -8,12 +8,12 @@ import { launchImageLibrary } from 'react-native-image-picker';
 class Registration extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { username: "", email: "", number: "", password: "", confirm_password: "", imageError: "", profilePic: null, picSelected: false }
+        this.state = { RegisterError: "", username: "", email: "", number: "", password: "", confirm_password: "", imageError: "", profilePic: null, picSelected: false }
     }
     error = {}
     password = ''
-    Validate = (type, Value) => {
-        if (type === "default") {
+    Validate = (Field, Value) => {
+        if (Field === "Username") {
             this.setState({ username: Value })
             if (Value.length < 4) {
                 this.error.username = true;
@@ -22,7 +22,7 @@ class Registration extends React.Component {
                 this.error.username = false
             }
         }
-        if (type === "email-address") {
+        if (Field === "Email") {
             this.setState({ email: Value })
             if (!Value.match('^[a-zA-Z0-9]+@+[a-zA-Z0-9]+.+[A-z]')) {
                 this.error.email = true
@@ -31,7 +31,7 @@ class Registration extends React.Component {
                 this.error.email = false
             }
         }
-        if (type === "numeric") {
+        if (Field === "Number") {
             this.setState({ number: Value })
             if (Value.length !== 10) {
                 this.error.number = true
@@ -40,7 +40,7 @@ class Registration extends React.Component {
                 this.error.number = false
             }
         }
-        if (type === "password") {
+        if (Field === "Password") {
             this.setState({ password: Value })
             if (!Value.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})')) {
                 this.error.password = true
@@ -50,7 +50,7 @@ class Registration extends React.Component {
                 this.error.password = false
             }
         }
-        if (type === "password") {
+        if (Field === "Confirm Password") {
             this.setState({ confirm_password: Value })
             if (this.password !== Value) {
                 this.error.confirm_password = true
@@ -60,7 +60,7 @@ class Registration extends React.Component {
                 this.confirm_password = Value;
             }
         }
-        this.setState({});
+        this.setState({RegisterError:""});
     }
     Data = {}
     Submit = () => {
@@ -80,7 +80,13 @@ class Registration extends React.Component {
                         this.props.submitRegister(res.data.data)
                         this.props.navigation.navigate('appScreen');
                     }
-                }).catch(error => console.log(error));
+                }).catch(error => {
+                    if(error.response.status===400){
+                    console.log(error.response.status)
+                    this.setState({RegisterError:"user already exists"});
+                    }
+                }
+            );
         }
     }
 
@@ -116,11 +122,11 @@ class Registration extends React.Component {
     }
     render() {
         const InputData = [
-            { Field: "Username", type: "default", placeholder: "Enter Username", error: ["enter valid username", "", "", "", ""] },
-            { Field: "Email", type: "email-address", placeholder: "Enter Email", error: ["", "enter valid email", "", "", ""] },
-            { Field: "Number", type: "numeric", placeholder: "Enter number", error: ["", "", "enter valid password", "", ""] },
-            { Field: "Password", type: "password", placeholder: "Enter password", error: ["", "", "", "enter strong password", ""] },
-            { Field: "Confirm Password", type: "password", placeholder: "Re-enter password", error: ["", "", "", "", "password and confirm password should match"] }
+            { Field: "Username", type: "default", placeholder: "Enter Username", usernameError:"enter valid username"},
+            { Field: "Email", type: "email-address", placeholder: "Enter Email", emailError:"enter valid email"},
+            { Field: "Number", type: "numeric", placeholder: "Enter number", numberError:"enter valid password"},
+            { Field: "Password", type: "default", placeholder: "Enter password", passwordError:"enter strong password"},
+            { Field: "Confirm Password", type: "default", placeholder: "Re-enter password", cPasswordError:"check password and re-enter"}
         ]
         const { photo } = this.state;
         return (
@@ -128,16 +134,17 @@ class Registration extends React.Component {
                 <View style={styles.container}>
                     <TouchableOpacity>
                         <View>
+                            <Text style={styles.mainError}>{this.state.RegisterError}</Text>
                             <Text style={styles.heading}>REGISTER</Text>
                             {InputData.map((input, index) =>
                                 <View style={styles.padding1} key={index}>
                                     <Text style={styles.text}>{input.Field}</Text>
-                                    <TextInput keyboardType={input.type} placeholder={input.placeholder} style={styles.input} maxLength={input.Field === 'Number' ? 10 : null} secureTextEntry={input.type === 'password' ? true : false} onChangeText={(value) => { this.Validate(input.type, value) }}></TextInput>
-                                    {this.error.username ? <Text style={styles.error}>{input.error[0]}</Text> : null}
-                                    {this.error.email ? <Text style={styles.error}>{input.error[1]}</Text> : null}
-                                    {this.error.number ? <Text style={styles.error}>{input.error[2]}</Text> : null}
-                                    {this.error.password ? <Text style={styles.error}>{input.error[3]}</Text> : null}
-                                    {this.error.confirm_password ? <Text style={styles.error}>{input.error[4]}</Text> : null}
+                                    <TextInput keyboardType={input.type} placeholder={input.placeholder} style={styles.input} maxLength={input.Field === 'Number' ? 10 : null} secureTextEntry={(input.Field === 'Password' || input.Field==='Confirm Password') ? true : false} onChangeText={(value) => { this.Validate(input.Field, value) }}></TextInput>
+                                    {this.error.username ? <Text style={styles.error}>{input.usernameError}</Text> : null}
+                                    {this.error.email ? <Text style={styles.error}>{input.emailError}</Text> : null}
+                                    {this.error.number ? <Text style={styles.error}>{input.numberError}</Text> : null}
+                                    {this.error.password ? <Text style={styles.error}>{input.passwordError}</Text> : null}
+                                    {this.error.confirm_password ? <Text style={styles.error}>{input.cPasswordError}</Text> : null}
                                 </View>
                             )}
                             <Text style={styles.profilePicText} onPress={this.pickImage}>
@@ -188,7 +195,7 @@ const styles = StyleSheet.create({
         padding: 60,
         borderRadius: 30,
         marginTop: 120,
-        height: 530
+        height: 550
     },
     input: {
         alignSelf: 'center',
@@ -224,7 +231,11 @@ const styles = StyleSheet.create({
         marginTop: 10,
         color: 'white',
         marginLeft: "40%"
-    }
+    },
+    mainError:{
+        color:'red',
+        textAlign:'center'
+     }
 });
 const mapStateToProps = (state) => ({
     userDetails: state,
