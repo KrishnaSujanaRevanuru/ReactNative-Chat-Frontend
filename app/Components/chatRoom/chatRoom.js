@@ -232,6 +232,9 @@ class ChatRoom extends Component {
               </View>
             );
           })}
+          <View>
+           {this.state.isOponentTyping && <Text style={styles.typing}>{this.props.client.username}  typing...</Text>}
+           </View>
         </ScrollView>
         <View style={styles.footer}>
           <TouchableOpacity style={styles.emoji_view} onPress={() => { this.onShowEmoji() }}>
@@ -244,7 +247,8 @@ class ChatRoom extends Component {
             value={this.state.chatMessage}
             onChangeText={(msg) => { this.handleText(msg) }}
             onFocus={() => { this.setState({ showEmoji: false }) }}
-         />
+            onSubmitEditing={() => this.send()}
+          />
           <TouchableOpacity onPress={() => this.send()} style={styles.send_btn}>
             <Image style={styles.message_send} source={SendButton} />
           </TouchableOpacity>
@@ -367,7 +371,14 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 30,
   },
-
+  typing: {
+    fontSize: 14,
+    alignSelf: 'flex-start',
+    fontWeight: "bold",
+    color: "white",
+    marginLeft: "3%",
+    marginBottom: "5%"
+  },
   footer: {
     display: "flex",
     width: '99%',

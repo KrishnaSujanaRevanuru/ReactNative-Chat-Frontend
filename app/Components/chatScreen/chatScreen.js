@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import axios from 'axios';
+import io from 'socket.io-client';
+import PushNotification from "react-native-push-notification";
 import { connect } from 'react-redux';
 import { createClient } from '../../actions/actions';
 import ContactIcon from '../../../assests/chatting.png';
@@ -192,10 +194,26 @@ class ChatScreen extends Component {
       searchData: [],
     };
   }
+  socket = null;
   componentDidMount() {
     this.getConversations();
     this.focusListener = this.props.navigation.addListener("focus",()=>this.getConversations());
+    this.socket = io('https://ptchatindia.herokuapp.com/', {
+      transports: ['websocket'],
+    });
+    this.socket.emit("notifications", { username: this.props.user.username });
+    this.socket.on("notification", this.onNotification);
   }
+
+  onNotification = (data) => {
+      PushNotification.localNotification({
+        channelId: "test-channel",
+        title: data.username + "  send a message",
+        message: "Message:" + data.message,
+        color: "blue", // (optional) default: none
+      })  
+  }
+
   getConversations = () => {
     axios
       .request({
@@ -241,7 +259,7 @@ class ChatScreen extends Component {
           roomIds: [id]
         }
       }).then((res) => {
-        this.setState({},()=>this.getConversations());
+        this.setState({}, () => this.getConversations());
       }).catch((error) => console.log(error))
   }
 
