@@ -197,7 +197,7 @@ class ChatScreen extends Component {
   socket = null;
   componentDidMount() {
     this.getConversations();
-    this.focusListener = this.props.navigation.addListener("focus",()=>this.getConversations());
+    this.focusListener = this.props.navigation.addListener("focus", () => this.getConversations());
     this.socket = io('https://ptchatindia.herokuapp.com/', {
       transports: ['websocket'],
     });
@@ -206,12 +206,12 @@ class ChatScreen extends Component {
   }
 
   onNotification = (data) => {
-      PushNotification.localNotification({
-        channelId: "test-channel",
-        title: data.username + "  send a message",
-        message: "Message:" + data.message,
-        color: "blue", // (optional) default: none
-      })  
+    PushNotification.localNotification({
+      channelId: "test-channel",
+      title: data.username + "  send a message",
+      message: "Message:" + data.message,
+      color: "blue", // (optional) default: none
+    })
   }
 
   getConversations = () => {
@@ -237,7 +237,7 @@ class ChatScreen extends Component {
                 details.push(user);
               }
             });
-            this.setState({ Data: details, usernames: usernames });
+            this.setState({ Data: details, usernames: usernames, isEmpty: false });
           }
           else {
             this.setState({ isEmpty: true });

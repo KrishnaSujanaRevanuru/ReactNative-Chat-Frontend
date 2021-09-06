@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     }
 });
 
-class ChatScreen extends Component {
+class Archive extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -180,13 +180,13 @@ class ChatScreen extends Component {
             isSearch: false,
             searchValue: '',
             searchData: [],
-            // usernames: [],
         };
     }
     componentDidMount() {
         this.getConversations();
-     this.props.navigation.addListener("focus",()=>this.getConversations());
+        this.focusListener = this.props.navigation.addListener("focus", () => this.getConversations());
     }
+
     getConversations = () => {
         axios
             .request({
@@ -209,7 +209,7 @@ class ChatScreen extends Component {
                                 details.push(user);
                             }
                         });
-                        this.setState({ Data: details, usernames: usernames });
+                        this.setState({ Data: details, usernames: usernames, isEmpty: false });
                     }
                     else {
                         this.setState({ isEmpty: true });
@@ -218,7 +218,7 @@ class ChatScreen extends Component {
             })
     };
 
-    onArcheive = (id) => {
+    onUnArcheive = (id) => {
         axios
             .request({
                 method: "POST",
@@ -231,17 +231,11 @@ class ChatScreen extends Component {
                     roomIds: [id]
                 }
             }).then((res) => {
-                this.setState({},()=>this.getConversations());
+                this.setState({}, () => this.getConversations());
             }).catch((error) => console.log(error))
     }
 
-    ToArchivedMsgs = () => {
-        this.props.navigation.navigate('archive');
-    }
 
-    onContactClick = () => {
-        this.props.navigation.navigate('contacts');
-    }
     getTimeByTimestamp = (timestamp) => {
         let date = new Date(timestamp * 1000);
         let ampm = date.getHours() >= 12 ? 'pm' : 'am';
@@ -323,10 +317,10 @@ class ChatScreen extends Component {
                                                     <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
                                                 </View>
                                                 <View style={styles.timeContainer}>
-                                                    <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>
-                                                    <Text style={styles.time}>{' ' + this.getDurationByTimestamp(user.latest.timestamp)}</Text>
+                                                    {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
+                                                    {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
                                                 </View>
-                                                <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
+                                                <TouchableOpacity style={styles.archive} onPress={() => { this.onUnArcheive(user.id) }}>
                                                     <Image style={styles.archiveicon} source={ArchiveIcon} />
                                                 </TouchableOpacity>
                                             </TouchableOpacity>
@@ -380,4 +374,4 @@ const mapDispatchToProps = (dispatch) => ({
     createClient: (data) => dispatch(createClient(data))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ChatScreen);
+export default connect(mapStateToProps, mapDispatchToProps)(Archive);
