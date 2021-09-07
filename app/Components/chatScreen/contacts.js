@@ -92,7 +92,7 @@ class Contacts extends Component {
         };
     }
     componentDidMount() {
-    this.focusListener = this.props.navigation.addListener("focus",()=>this.getContacts());
+        this.focusListener = this.props.navigation.addListener("focus", () => this.getContacts());
     }
     getContacts = () => {
         axios
@@ -129,7 +129,7 @@ class Contacts extends Component {
                 <View style={styles.header}>
                     <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
                     <Text style={styles.headerText}>Contacts</Text>
-                    <Text style={styles.headerMenu}>...</Text>
+                    <Text style={styles.headerMenu}>&#8942;</Text>
                 </View>
                 {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
                 <ScrollView style={styles.scrollViewContainer}>

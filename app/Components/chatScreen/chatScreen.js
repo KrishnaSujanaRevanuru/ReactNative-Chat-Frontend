@@ -5,10 +5,9 @@ import io from 'socket.io-client';
 import PushNotification from "react-native-push-notification";
 import { connect } from 'react-redux';
 import { createClient } from '../../actions/actions';
-import ContactIcon from '../../../assests/chatting.png';
 import ArchiveIcon from '../../../assests/Archive.png';
 import { Dimensions } from 'react-native';
-import Materialicons from 'react-native-vector-icons/MaterialIcons';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
@@ -52,8 +51,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: 'bold',
     marginLeft: 10,
-    width: 100,
-    height: 50,
+    width: 120,
+    height: 35,
     borderRadius: 30,
   },
   headerSearchIcon: {
@@ -68,8 +67,8 @@ const styles = StyleSheet.create({
     color: 'white',
     alignSelf: 'center',
     fontSize: 24,
-    right: 10,
-    top: 15,
+    right: 15,
+    top: 23,
     position: 'absolute',
   },
   scrollViewContainer: {
@@ -128,25 +127,6 @@ const styles = StyleSheet.create({
     color: 'white',
     alignSelf: 'center',
     paddingTop: 300
-  },
-  bottomContact: {
-    width: 70,
-    height: 70,
-    borderRadius: 70 / 2,
-    backgroundColor: 'white',
-    top: '90%',
-    paddingTop: 15,
-    bottom: 0,
-    right: 0,
-    position: 'absolute',
-    marginHorizontal: 5,
-    marginVertical: -5
-  },
-  BottomProfile: {
-    width: 50,
-    height: 50,
-    left: 10,
-    alignItems: 'center',
   },
   archive: {
     top: 10,
@@ -266,10 +246,6 @@ class ChatScreen extends Component {
   ToArchivedMsgs = () => {
     this.props.navigation.navigate('archive');
   }
-
-  onContactClick = () => {
-    this.props.navigation.navigate('contacts');
-  }
   getTimeByTimestamp = (timestamp) => {
     let date = new Date(timestamp * 1000);
     let ampm = date.getHours() >= 12 ? 'pm' : 'am';
@@ -314,6 +290,7 @@ class ChatScreen extends Component {
   }
 
   onConversationClick = (user) => {
+    console.log('onConversationClick', user)
     this.props.createClient(user);
     this.props.navigation.navigate('chatRoom');
   }
@@ -326,6 +303,7 @@ class ChatScreen extends Component {
           <Text style={styles.headerText}>Conversations</Text>
           {this.state.isSearch &&
             <TextInput
+              autoFocus
               placeholder="Search Here..."
               placeholderTextColor='white'
               style={styles.headerInput}
@@ -333,8 +311,8 @@ class ChatScreen extends Component {
               onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
             />
           }
-          <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
-          <Text style={styles.headerMenu} >...</Text>
+          <Text style={styles.headerSearchIcon} onPress={this.searchVisible}><Icon size={28} color="white" name="search" /></Text>
+          <Text style={styles.headerMenu} >&#8942;</Text>
         </View>
         {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
         <ScrollView style={styles.scrollViewContainer}>
@@ -372,34 +350,34 @@ class ChatScreen extends Component {
           {this.state.searchData.length !== 0 ?
             this.state.searchData.map((user, index) => {
               return (
-                <View key={index} style={styles.body}>
-                  <View style={styles.containerBody}>
-                    <Image
-                      style={styles.bodyProfile}
-                      source={{
-                        uri: user.client.profile,
-                      }}
-                    />
-                  </View>
-                  <View style={styles.bodyTitle}>
-                    <Text style={styles.bodyText}>{user.client.username}</Text>
-                  </View>
+                <View key={index}>
+                  {user.client && user.latest &&
+                    <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user) }}>
+                      <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
+                      <View>
+                        <Text style={styles.bodyTextClient}>{user.client.username}</Text>
+                        <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                      </View>
+                      <View style={styles.timeContainer}>
+                        {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
+                        {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
+                      </View>
+                      <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                      <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
+                        <Image style={styles.archiveicon} source={ArchiveIcon} />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  }
                 </View>
               )
             }) :
             (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
               <Text style={styles.notFound}>Not Found</Text> : null}
         </ScrollView>
-        <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
-          <Image
-            style={styles.BottomProfile}
-            source={ContactIcon} />
-        </TouchableOpacity>
       </View>
     );
   }
 }
-
 
 const mapStateToProps = (state) => (
   {
@@ -407,7 +385,6 @@ const mapStateToProps = (state) => (
     client: state.user.client
   }
 );
-
 
 const mapDispatchToProps = (dispatch) => ({
   createClient: (data) => dispatch(createClient(data))

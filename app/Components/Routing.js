@@ -11,7 +11,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import Materialicons from 'react-native-vector-icons/MaterialIcons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import ClientProfile from './chatRoom/clientProfile'
 const TabNavigator = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
 class Tab extends Component {
@@ -51,6 +51,7 @@ class appScreen extends Component {
         <StackNav.Navigator initialRouteName='chatScreen'>
           <StackNav.Screen name="chatScreen" component={Tab} options={{ header: () => null }} />
           <StackNav.Screen name="chatRoom" component={ChatRoom} options={{ header: () => null }} />
+          <StackNav.Screen name="clientProfile" component={ClientProfile} options={{ header: () => null }} />
         </StackNav.Navigator>
       </NavigationContainer>
     )

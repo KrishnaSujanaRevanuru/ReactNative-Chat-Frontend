@@ -15,6 +15,8 @@ import MessagePop from './messagePop';
 import SendButton from '../../../assests/send.png';
 import { Dimensions } from 'react-native';
 import EmojiSelector, { Categories } from 'react-native-emoji-selector';
+import Options from './options';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { screenHeight, screenWidth } = Dimensions.get('window');
 class ChatRoom extends Component {
@@ -27,7 +29,8 @@ class ChatRoom extends Component {
       isOponentTyping: false,
       showEmoji: false,
       reactionData: {},
-      tempReaction: false
+      tempReaction: false,
+      showOptions: false
     };
   }
   socket = null;
@@ -86,13 +89,14 @@ class ChatRoom extends Component {
   };
 
   send = () => {
+    Keyboard.dismiss();
     if (this.state.chatMessage) {
       this.socket.emit('chat', {
         username: this.props.user.username,
         client2: this.props.client.username,
         message: this.state.chatMessage,
       });
-      this.setState({ chatMessage: "",showEmoji: false  });
+      this.setState({ chatMessage: "", showEmoji: false });
     }
   };
 
@@ -182,17 +186,29 @@ class ChatRoom extends Component {
     this.socket.once('messages', this.onMessages);
     this.setState({ reactionData: {}, showEmoji: false, tempReaction: false });
   }
+  showPopUp = () => {
+    this.setState({ showOptions: this.state.showOptions ? false : true })
+  }
+  showProfile = () => {
+    this.setState({ viewOptions: false })
+    this.props.navigation.navigate('clientProfile');
+
+  }
+  setPopUpCallBack = () => {
+    this.setState({ showOptions: false })
+  }
 
   render() {
     const { messages } = this.state;
     return (
       <View style={styles.chat_room}>
         <View style={styles.header}>
-          <Text style={styles.back_arrow} onPress={()=>{this.props.navigation.goBack()}}>&#8592;</Text>
+          <Text onPress={() => { this.props.navigation.goBack() }}> <Icon size={22} color="white" name="arrow-back" /></Text>
           <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
           <Text style={styles.headerText}>{this.props.client.username}</Text>
-          <Text style={styles.headerMenu}>...</Text>
+          <Text style={styles.headerMenu} onPress={() => { this.showPopUp() }}>&#8942;</Text>
         </View>
+        <View style={styles.popUp1}>{this.state.showOptions && <Options showProfile={this.showProfile} callBack={this.setPopUpCallBack} />}</View>
         <ScrollView contentContainerStyle={styles.scrollViewContainer}>
           {messages && !!messages.length && messages.map((message, index) => {
             return (
@@ -205,40 +221,40 @@ class ChatRoom extends Component {
                         <View style={styles.msg_right}>
                           <Text style={styles.message}>{message.message}</Text>
                           <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
-                          {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} style={styles.msg_right_reaction}><Text style={{ marginLeft: "3%" }}>{message.reaction}</Text></TouchableOpacity>}
                         </View>
+                        {message && message.reaction && <TouchableOpacity style={styles.msg_right_reaction}><Text >{message.reaction}</Text></TouchableOpacity>}
                         <Text style={styles.msg_time_right}>
                           {this.getTimeByTimestamp(message.timestamp)}
                         </Text>
-                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                        <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
                       </View>
                     }
                   </>
                 ) : (
                   <>
                     {message.is_delete !== 1 &&
-                  <View style={styles.msg_field_container}>
-                    <View style={styles.msg_left}>
-                      <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}  >{message.message}</Text>
-                      <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
-                    </View>
-                    {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} ><Text style={styles.msg_left_reaction}>{message.reaction}</Text></TouchableOpacity>}
-                    <Text style={styles.msg_time_left}>
-                      {this.getTimeByTimestamp(message.timestamp)}
-                    </Text>
-                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
-                  </View>}
-                </>)}
+                      <View style={styles.msg_field_container}>
+                        <View style={styles.msg_left}>
+                          <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}  >{message.message}</Text>
+                          <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                        </View>
+                        {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} ><Text style={styles.msg_left_reaction}>{message.reaction}</Text></TouchableOpacity>}
+                        <Text style={styles.msg_time_left}>
+                          {this.getTimeByTimestamp(message.timestamp)}
+                        </Text>
+                        <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                      </View>}
+                  </>)}
               </View>
             );
           })}
           <View>
-           {this.state.isOponentTyping && <Text style={styles.typing}>{this.props.client.username}  typing...</Text>}
-           </View>
+            {this.state.isOponentTyping && <Text style={styles.typing}>{this.props.client.username}  typing...</Text>}
+          </View>
         </ScrollView>
         <View style={styles.footer}>
           <TouchableOpacity style={styles.emoji_view} onPress={() => { this.onShowEmoji() }}>
-            <Text style={styles.emoji_add}>&#9787;</Text>
+            <Text style={styles.emoji_add}><Icon size={28} color="#D5D4D0" name="emoji-emotions" /></Text>
           </TouchableOpacity>
           <TextInput
             style={styles.message_input}
@@ -266,7 +282,6 @@ class ChatRoom extends Component {
             />
           </View>
         }
-
       </View>
     );
   }
@@ -354,7 +369,6 @@ const styles = StyleSheet.create({
     height: '50%',
     width: '100%',
     backgroundColor: '#BFC2C6',
-    // position: 'absolute'
   },
   msg_left: {
     color: 'white',
@@ -393,9 +407,9 @@ const styles = StyleSheet.create({
     bottom: '1%',
   },
   emoji_add: {
-    color: 'gray',
+    color: '#CCCCC9',
     fontWeight: 'bold',
-    fontSize:32,
+    fontSize: 32,
   },
   emoji: {
     width: '9%',
@@ -407,7 +421,22 @@ const styles = StyleSheet.create({
     marginTop: 30,
     left: 4,
   },
+  popUp: {
+    display: 'flex',
+    position: 'absolute',
+  },
+  popUp1: {
+    display: 'flex',
+    position: 'absolute',
+    left: "64%",
+    width: "30%",
+    top: 23
+  },
+  options: {
+    display: 'flex',
+    position: 'absolute',
 
+  },
   message_input: {
     height: '100%',
     width: '70%',
@@ -470,15 +499,7 @@ const styles = StyleSheet.create({
     padding: '1.5%',
     marginLeft: '3%'
   },
-  back_arrow:{
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize:30,
-    height: 30,
-    width: 30,
-    marginBottom:27
-  },
-  popUp:{position:'absolute',alignSelf:'center'},
+  popUp: { position: 'absolute', alignSelf: 'center' },
 });
 
 const mapStateToProps = state => (
