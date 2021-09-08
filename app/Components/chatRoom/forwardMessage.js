@@ -219,13 +219,13 @@ class ForwardMessage extends Component {
 
   recentChatCheckUser = index => {
     let selectUser = this.state.isRecentChatSelected;
-    selectUser[index] = true;
+    selectUser[index] = !selectUser[index];
     this.setState({isRecentChatSelected: selectUser});
   };
 
   contactCheckUser = index => {
     let selectUser = this.state.isContactSelected;
-    selectUser[index] = true;
+    selectUser[index] = !selectUser[index];
     this.setState({isContactSelected: selectUser});
   };
   forwardMessages = () => {

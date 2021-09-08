@@ -17,6 +17,7 @@ import SendButton from '../../../assests/send.png';
 import deliveredIcon from '../../../assests/deliveredTick.png';
 import { Dimensions } from 'react-native';
 import EmojiSelector, { Categories } from 'react-native-emoji-selector';
+import { Directions } from 'react-native-gesture-handler';
 
 const { screenHeight, screenWidth } = Dimensions.get('window');
 class ChatRoom extends Component {
@@ -29,7 +30,8 @@ class ChatRoom extends Component {
       isOponentTyping: false,
       showEmoji: false,
       reactionData: {},
-      tempReaction: false
+      tempReaction: false,
+      replyMessageIndex:-1,
     };
   }
   socket = null;
@@ -112,15 +114,30 @@ class ChatRoom extends Component {
     });
   };
 
-  send = () => {
-    if (this.state.chatMessage) {
-      this.socket.emit('chat', {
+  send = (replyMessageIndex) => {
+    if(replyMessageIndex===-1){
+      if (this.state.chatMessage) {
+        this.socket.emit('chat', {
         username: this.props.user.username,
         client2: this.props.client.username,
         message: this.state.chatMessage,
-      });
-      this.setState({ chatMessage: "",showEmoji: false  });
+        });
+        this.setState({chatMessage: ""});
+      }
     }
+    else{
+     if (this.state.chatMessage) {
+        this.socket.emit("reply", {
+        username: this.props.user.username,
+        client: this.props.client.username,
+        messageId: this.state.messages[this.state.replyMessageIndex].id,
+        message: this.state.chatMessage
+        });
+        this.setState({chatMessage: ""});
+      }
+    }
+    this.replyMessage=false
+    this.setState({replyMessageIndex:-1,replyMessage:false});
   };
 
   onShowEmoji = () => {
@@ -183,21 +200,33 @@ class ChatRoom extends Component {
     }
     this.setState({ messages: messages });
   };
-
-  setMsgPopToFalse = (msgObj, type) => {
+  firstMessage=''
+  firstMessageSender=''
+  replyMessage=''
+  setMsgPopToFalse = (msgObj,type) => {
     let messages = this.state.messages;
     for (let i = 0; i < messages.length; i++) messages[i].messagePopUp = false;
-    switch (type) {
-      case "delete":
+    switch(type){
+      case 'delete':
         this.setState({ messages: messages }, () => {
           this.socket.emit('delete', { username: this.props.user.username, client: this.props.client.username, messageId: msgObj.id })
           this.socket.once('messages', this.onMessages);
         })
         break;
-      case "star": this.setState({ messages: messages }); break;
+      case 'reply':
+        for(let i=0;i<messages.length;i++){
+          if(messages[i].id===msgObj.id){
+            this.firstMessage=msgObj.message,
+            this.firstMessageSender=msgObj.username
+            this.replyMessage=true
+            this.setState({replyMessageIndex:i});
+          }
+        }
+        break;
       case "forward": this.forwardMessages(msgObj); break;
       default: break;
     }
+    
   }
 
   handleReaction = (obj) => {
@@ -221,6 +250,10 @@ class ChatRoom extends Component {
     this.props.navigation.navigate('forward',{message:msgObj});
   }
 
+  cancelReply=()=>{
+    this.replyMessage=false
+    this.setState({replyMessageIndex:-1});
+  }
   render() {
     const { messages } = this.state;
     return (
@@ -241,15 +274,39 @@ class ChatRoom extends Component {
                     {message.is_delete !== 1 &&
                       <View>
                         <View style={styles.msg_right}>
-                          <Text style={styles.message}>{message.message}</Text>
-                          <Text style={styles.msg_time_right}>
-                          {this.getTimeByTimestamp(message.timestamp)}
-                          {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
-                          </Text>
-                          <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                        {message.hasOwnProperty('replyId') ? 
+                            <View>
+                            {messages.map((replyMessage,index)=>{
+                              return(
+                                <View key={index}>
+                                  {message.replyId===replyMessage.id ? 
+                                  <View>
+                                    <View style={styles.right_replyMessage_view}>
+                                      <Text style={styles.right_username}>{replyMessage.username}</Text>
+                                      <Text style={styles.message}>{replyMessage.message}</Text>
+                                    </View>
+                                    <View style={styles.replyMessage_left_right}>
+                                      <Text style={styles.right_message}>{message.message}</Text>
+                                      <Text style={styles.msg_time_right}>
+                                        {this.getTimeByTimestamp(message.timestamp)}
+                                        {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
+                                      </Text>
+                                    </View>
+                                  </View>:null}
+                                </View>
+                              )
+                            })}
+                           </View> : <View style={styles.replyMessage_left_right}>
+                             <Text style={styles.right_message}>{message.message}</Text>
+                             <Text style={styles.msg_time_right}>
+                              {this.getTimeByTimestamp(message.timestamp)}
+                              {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
+                              </Text>
+                             </View> }
+                             <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
                           {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} style={styles.msg_right_reaction}><Text style={{ marginLeft: "3%" }}>{message.reaction}</Text></TouchableOpacity>}
                         </View>
-                      <View style={styles.popUp} >{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
                       </View>
                     }
                   </>
@@ -258,12 +315,42 @@ class ChatRoom extends Component {
                     {message.is_delete !== 1 &&
                   <View style={styles.msg_field_container}>
                     <View style={styles.msg_left}>
-                      <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}  >{message.message}</Text>
-                      <Text style={styles.msg_time_left}>{this.getTimeByTimestamp(message.timestamp)}</Text>
-                      <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                      <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}>
+                        {message.hasOwnProperty('replyId') ? 
+                            <View>
+                            {messages.map((replyMessage,index)=>{
+                              console.log("messages",messages);
+                              return(
+                                <View key={index}>
+                                  {message.replyId===replyMessage.id ? 
+                                  <View>
+                                    <View style={styles.left_replyMessage_view}>
+                                      <Text style={styles.left_username}>{replyMessage.username}</Text>
+                                      <Text style={styles.left_message}>{replyMessage.message}</Text>
+                                    </View>
+                                    <View style={styles.replyMessage_left_right}>
+                                      <Text style={styles.left_message}>{message.message}</Text>
+                                      <Text style={styles.msg_time_left}>
+                                        {this.getTimeByTimestamp(message.timestamp)}
+                                        {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
+                                      </Text>
+                                      <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                                    </View>
+                                  </View>:null}
+                                </View>
+                              )
+                            })}
+                           </View> : <View style={styles.replyMessage_left_right}>
+                                      <Text style={styles.left_message}>{message.message}</Text>
+                                    </View> }
+                        <Text style={styles.msg_time_left}>
+                          {this.getTimeByTimestamp(message.timestamp)}
+                        </Text>
+                        <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                      </Text>
                     </View>
                     {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} ><Text style={styles.msg_left_reaction}>{message.reaction}</Text></TouchableOpacity>}
-                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} forward={this.forwardMessages} Index={index} /> : null}</View>
+                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
                   </View>}
                 </>)}
               </View>
@@ -273,6 +360,13 @@ class ChatRoom extends Component {
            {this.state.isOponentTyping && <Text style={styles.typing}>{this.props.client.username}  typing...</Text>}
            </View>
         </ScrollView>
+        {this.replyMessage ? 
+        <View style={styles.firstMessage_view}>
+          <View style={styles.firstMessage}>
+            <Text style={styles.message_color}>{this.firstMessage}</Text>
+          </View>
+          <View style={styles.cross_mark}><Text style={styles.message_color} onPress={()=>{this.cancelReply()}}>X</Text></View>
+        </View> : null}
         <View style={styles.footer}>
           <TouchableOpacity style={styles.emoji_view} onPress={() => { this.onShowEmoji() }}>
             <Text style={styles.emoji_add}>&#9787;</Text>
@@ -286,7 +380,7 @@ class ChatRoom extends Component {
             onFocus={() => { this.setState({ showEmoji: false }) }}
             onSubmitEditing={() => this.send()}
           />
-          <TouchableOpacity onPress={() => this.send()} style={styles.send_btn}>
+          <TouchableOpacity onPress={() => this.send(this.state.replyMessageIndex)} style={styles.send_btn}>
             <Image style={styles.message_send} source={SendButton} />
           </TouchableOpacity>
         </View>
@@ -313,7 +407,6 @@ const styles = StyleSheet.create({
   chat_room: {
     height: '100%',
     backgroundColor: '#202124',
-    height: "100%",
   },
   header: {
     display: "flex",
@@ -363,12 +456,12 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignSelf: 'flex-end',
-    backgroundColor: '#8E1FC4',
+    backgroundColor: '#437f60',
     padding: '2%',
     marginTop: '5%',
     marginBottom: '1%',
     marginRight: '2%',
-    borderTopLeftRadius: 30,
+    borderTopLeftRadius: 25,
     borderTopRightRadius: 30,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 0,
@@ -377,22 +470,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
+    marginLeft:5,
+    marginTop:5,
+    marginBottom:'3%',
+    justifyContent:'flex-start',
   },
   msg_time_right: {
     color: 'white',
     alignSelf: 'flex-end',
-    marginLeft:'2%',
-    marginRight: '1%',
-    fontSize:10
+    marginLeft:'3%',
+    marginTop: '2%',
+    fontSize:12
   },
   msg_time_left: {
     color: 'white',
-    alignSelf: 'flex-end',
-    marginTop: '5%',
-    fontSize:14
-  },
-  MessagePopUpLeft:{
-    alignSelf:'center'
+    alignSelf: 'flex-start',
+    marginLeft: '3%',
+    marginTop: '2%',
+    fontSize:10
   },
   emojiContainer: {
     height: '50%',
@@ -400,9 +495,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#BFC2C6',
   },
   msg_left: {
-    color: 'white',
+    color: '#ffffff',
     alignSelf: 'flex-start',
-    backgroundColor: '#8a8787',
+    backgroundColor: '#1a1a1a',
     display: 'flex',
     flexDirection: 'row',
     padding: '2%',
@@ -487,7 +582,9 @@ const styles = StyleSheet.create({
   messageOptions: {
     fontSize: 15,
     color: 'white',
-    marginLeft: 2,
+    marginLeft: '2%',
+    marginTop:8,
+    justifyContent:'flex-end',
   },
   messagePopUp: {
     alignSelf: 'flex-start'
@@ -522,13 +619,88 @@ const styles = StyleSheet.create({
     marginBottom:27
   },
   popUp:{position:'absolute',alignSelf:'center'},
+  firstMessage_view:{
+    backgroundColor:'#1a1a1a',
+    display:'flex',
+    flexDirection:'row',
+    marginBottom:4,
+    marginLeft:20,
+    borderRadius:20,
+    marginRight:20,
+    width:screenWidth,
+  },
+  firstMessage:{
+    marginLeft:10,
+    width:'85%',
+    justifyContent:'flex-start',
+    paddingTop:10,
+    paddingBottom:10,
+  },
+  cross_mark:{
+    width:'15%',
+    left:'15%',
+  },
+  message_color:{
+    color:'white',
+  },
+  right_username:{
+    color:'#ff99ff',
+    fontWeight: "bold",
+    paddingLeft:7,
+  },
+  left_username:{
+    color:'#184e34',
+    fontWeight: "bold",
+    paddingLeft:7,
+  },
+  right_replyMessage_view:{
+    backgroundColor:'#184e34',
+    color:'#ffffff',
+    borderRadius:7,
+    borderLeftWidth:3,
+    borderLeftColor:'#ff99ff',
+    paddingRight:10,
+    
+  },
+  left_replyMessage_view:{
+    backgroundColor:'#202124',
+    color:'#ffffff',
+    borderRadius:7,
+    borderLeftWidth:3,
+    borderLeftColor:'#184e34',
+    paddingBottom:2,
+  },
+  left_message:{
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    marginLeft:5,
+    marginRight:5,
+    marginTop:5,
+    width:screenWidth,
+    justifyContent:'flex-end',
+  },
+  right_message:{
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    marginLeft:5,
+    marginRight:5,
+    marginTop:5,
+    width:screenWidth,
+    justifyContent:'flex-start',
+  },
+  replyMessage_left_right:{
+    display:'flex',
+    flexDirection:'row'
+  }
 });
 
 const mapStateToProps = state => (
   {
     user: state.user.userDetails,
     client: state.user.client,
-    socket: state.socket
+    socket: state.socket,
   }
 );
 
