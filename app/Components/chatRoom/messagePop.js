@@ -23,8 +23,14 @@ class MessagePop extends Component {
     }
 
     deleteMessage = () => {
-        this.props.callBack(this.props.messageDetails);
+        this.props.callBack(this.props.messageDetails,"delete");
     }
+
+    forward(){
+        console.log(this.props.messageDetails);
+        this.props.callBack(this.props.messageDetails,"forward");
+    }
+
     render() {
         const optionPosition = this.props.optionsCategorey;
         return (
@@ -32,7 +38,7 @@ class MessagePop extends Component {
                 {optionPosition === 'mssgPopup' ?
                     < View style={styles.rightOptions} >
                         <TouchableOpacity><Text style={styles.optionsMsgText}>Reply</Text></TouchableOpacity>
-                        <TouchableOpacity><Text style={styles.optionsMsgText}>Forward Message</Text></TouchableOpacity>
+                        <TouchableOpacity onPress={()=>{this.forward()}}><Text style={styles.optionsMsgText}>Forward Message</Text></TouchableOpacity>
                         <TouchableOpacity onPress={() => { this.deleteMessage() }}><Text style={styles.optionsMsgText}>Delete Message</Text></TouchableOpacity>
                         <TouchableOpacity><Text style={styles.optionsMsgText}>Star Message</Text></TouchableOpacity>
                     </View > : null}

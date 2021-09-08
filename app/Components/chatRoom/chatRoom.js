@@ -12,7 +12,9 @@ import {
   Keyboard
 } from 'react-native';
 import MessagePop from './messagePop';
+import readIcon from '../../../assests/seenTick.png';
 import SendButton from '../../../assests/send.png';
+import deliveredIcon from '../../../assests/deliveredTick.png';
 import { Dimensions } from 'react-native';
 import EmojiSelector, { Categories } from 'react-native-emoji-selector';
 
@@ -39,10 +41,7 @@ class ChatRoom extends Component {
       username: this.props.user.username,
       client2: this.props.client.username,
     });
-    this.socket.on('messages', this.onMessages);
-    this.socket.on('message', this.onMessage);
-    this.socket.on('typing-start', this.onTyping);
-    this.socket.on('typing-end', this.onTyping);
+    this.socket.once('messages', this.onMessages);
   };
 
   componentWillUnmount() {
@@ -59,6 +58,14 @@ class ChatRoom extends Component {
   };
 
   onMessage = data => {
+    if (data && this.props.user && data.username !== this.props.user.username) {
+      this.socket.emit("read_status", {
+        username: this.props.user.username,
+        client2: this.props.client.username,
+        messageIds: [data.id],
+      });
+      data.readStatus=1;
+    }
     let messages = this.state.messages;
     Object.assign(data, { messagePopUp: false });
     messages.push(data);
@@ -66,8 +73,28 @@ class ChatRoom extends Component {
     this.setState({ messages: messages });
   };
 
-  onMessages = data => {
-    this.setState({ messages: data.messages });
+  onMessages = (data) => {
+    if(this.state.messages && data && this.state.messages.length < data.messages.length){
+      let msgIds = data.messages.filter((msg) => {
+        if (msg.readStatus === 0 && this.props.user.username !== msg.username) {
+          return msg.id;
+        }
+    });
+    if (msgIds && msgIds.length) {
+      this.socket.emit("read_status", {
+        username: this.props.user.username,
+        client2: this.props.client.username,
+        messageIds: msgIds,
+      });
+    }
+  }
+    this.setState({messages: data.messages}
+      ,()=>{
+        this.socket.on("message", this.onMessage);
+        this.socket.on("typing-start", this.onTyping);
+        this.socket.on("typing-end", this.onTyping);
+      }
+      );
     this.socket.off('messages', true);
   };
 
@@ -157,14 +184,22 @@ class ChatRoom extends Component {
     this.setState({ messages: messages });
   };
 
-  setMsgPopToFalse = (msgObj) => {
+  setMsgPopToFalse = (msgObj, type) => {
     let messages = this.state.messages;
     for (let i = 0; i < messages.length; i++) messages[i].messagePopUp = false;
-    this.setState({ messages: messages }, () => {
-      this.socket.emit('delete', { username: this.props.user.username, client: this.props.client.username, messageId: msgObj.id })
-      this.socket.once('messages', this.onMessages);
-    })
+    switch (type) {
+      case "delete":
+        this.setState({ messages: messages }, () => {
+          this.socket.emit('delete', { username: this.props.user.username, client: this.props.client.username, messageId: msgObj.id })
+          this.socket.once('messages', this.onMessages);
+        })
+        break;
+      case "star": this.setState({ messages: messages }); break;
+      case "forward": this.forwardMessages(msgObj); break;
+      default: break;
+    }
   }
+
   handleReaction = (obj) => {
     if (this.state.showEmoji === false) {
       this.setState({ reactionData: obj, showEmoji: true, tempReaction: true });
@@ -181,6 +216,9 @@ class ChatRoom extends Component {
     this.socket.emit("reaction", { username: this.props.user.username, client: this.props.client.username, messageId: obj.id, reaction: reaction })
     this.socket.once('messages', this.onMessages);
     this.setState({ reactionData: {}, showEmoji: false, tempReaction: false });
+  }
+  forwardMessages = (msgObj) => {
+    this.props.navigation.navigate('forward',{message:msgObj});
   }
 
   render() {
@@ -204,13 +242,14 @@ class ChatRoom extends Component {
                       <View>
                         <View style={styles.msg_right}>
                           <Text style={styles.message}>{message.message}</Text>
+                          <Text style={styles.msg_time_right}>
+                          {this.getTimeByTimestamp(message.timestamp)}
+                          {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
+                          </Text>
                           <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
                           {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} style={styles.msg_right_reaction}><Text style={{ marginLeft: "3%" }}>{message.reaction}</Text></TouchableOpacity>}
                         </View>
-                        <Text style={styles.msg_time_right}>
-                          {this.getTimeByTimestamp(message.timestamp)}
-                        </Text>
-                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                      <View style={styles.popUp} >{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
                       </View>
                     }
                   </>
@@ -220,13 +259,11 @@ class ChatRoom extends Component {
                   <View style={styles.msg_field_container}>
                     <View style={styles.msg_left}>
                       <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}  >{message.message}</Text>
+                      <Text style={styles.msg_time_left}>{this.getTimeByTimestamp(message.timestamp)}</Text>
                       <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
                     </View>
                     {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} ><Text style={styles.msg_left_reaction}>{message.reaction}</Text></TouchableOpacity>}
-                    <Text style={styles.msg_time_left}>
-                      {this.getTimeByTimestamp(message.timestamp)}
-                    </Text>
-                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
+                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} forward={this.forwardMessages} Index={index} /> : null}</View>
                   </View>}
                 </>)}
               </View>
@@ -276,6 +313,7 @@ const styles = StyleSheet.create({
   chat_room: {
     height: '100%',
     backgroundColor: '#202124',
+    height: "100%",
   },
   header: {
     display: "flex",
@@ -343,18 +381,23 @@ const styles = StyleSheet.create({
   msg_time_right: {
     color: 'white',
     alignSelf: 'flex-end',
-    marginRight: '3%',
+    marginLeft:'2%',
+    marginRight: '1%',
+    fontSize:10
   },
   msg_time_left: {
     color: 'white',
-    alignSelf: 'flex-start',
-    marginLeft: '3%',
+    alignSelf: 'flex-end',
+    marginTop: '5%',
+    fontSize:14
+  },
+  MessagePopUpLeft:{
+    alignSelf:'center'
   },
   emojiContainer: {
     height: '50%',
     width: '100%',
     backgroundColor: '#BFC2C6',
-    // position: 'absolute'
   },
   msg_left: {
     color: 'white',
@@ -444,7 +487,7 @@ const styles = StyleSheet.create({
   messageOptions: {
     fontSize: 15,
     color: 'white',
-    marginLeft: 5,
+    marginLeft: 2,
   },
   messagePopUp: {
     alignSelf: 'flex-start'
@@ -485,7 +528,7 @@ const mapStateToProps = state => (
   {
     user: state.user.userDetails,
     client: state.user.client,
-    socket: state.socket,
+    socket: state.socket
   }
 );
 

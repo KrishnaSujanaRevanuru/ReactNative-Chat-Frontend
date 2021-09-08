@@ -4,13 +4,14 @@ import Login from './login/login';
 import ChatScreen from './chatScreen/chatScreen';
 import Contacts from './chatScreen/contacts';
 import ChatRoom from './chatRoom/chatRoom';
+import ForwardMessage from './chatRoom/forwardMessage';
 import Archive from './Archive/Archive';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
-import Materialicons from 'react-native-vector-icons/MaterialIcons';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Materialicons from 'react-native-vector-icons/MaterialIcons';
 
 const TabNavigator = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
@@ -51,6 +52,7 @@ class appScreen extends Component {
         <StackNav.Navigator initialRouteName='chatScreen'>
           <StackNav.Screen name="chatScreen" component={Tab} options={{ header: () => null }} />
           <StackNav.Screen name="chatRoom" component={ChatRoom} options={{ header: () => null }} />
+          <StackNav.Screen name="forward" component={ForwardMessage} options={{ header: () => null }} />
         </StackNav.Navigator>
       </NavigationContainer>
     )
