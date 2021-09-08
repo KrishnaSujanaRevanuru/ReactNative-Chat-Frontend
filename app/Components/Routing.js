@@ -23,7 +23,7 @@ class Tab extends Component {
             tabBarIcon: ({ color, size }) => {
               let iconName;
 
-              if (route.name === 'chatScreen') iconName = 'home';
+              if (route.name === 'chatScreen') iconName = 'chat';
               else if (route.name === 'contacts') iconName = 'contacts';
               else if (route.name === 'archive') iconName = 'archive';
               return <Materialicons name={iconName} size={size} color={color} />;
