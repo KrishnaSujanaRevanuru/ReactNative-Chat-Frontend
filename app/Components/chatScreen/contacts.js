@@ -4,7 +4,8 @@ import axios from "axios";
 import { connect } from "react-redux";
 import { createClient } from '../../actions/actions';
 import { Dimensions } from 'react-native';
-
+import Options from '../headerOptions/options';
+import{logOut} from '../../actions/actions'
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
@@ -90,6 +91,12 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
         borderRadius: 20
     },
+    popUp1: {
+        position: 'absolute',
+        alignSelf: 'center',
+        left: "70%",
+
+    },
     bodyText: {
         color: "white",
         fontSize: 18,
@@ -106,11 +113,15 @@ class Contacts extends Component {
         super(props);
         this.state = {
             Data: null,
-            user: null
+            user: null,
+            chooseOption: true,
+            headerOptions: true,
+            
         };
     }
     componentDidMount() {
         this.getContacts();
+        this.focusListener = this.props.navigation.addListener("focus", () => this.getContacts());
     }
     getContacts = () => {
         axios
@@ -152,6 +163,25 @@ class Contacts extends Component {
         }
     this.setState({});
     }
+    selectOptions = () => {
+        if (this.state.headerOptions === true) {
+          this.setState({ headerOptions: false,});
+        }
+        else if (this.state.headerOptions=== false) {
+          this.setState({ headerOptions: true,});
+        }
+      }
+    showProfile = () => {
+        this.setState({ viewOptions: false })
+        this.props.navigation.navigate('profile');
+    }
+    logout = () => {
+        this.props.logOut()
+        this.props.navigation.navigate('login');
+    }
+    
+
+
     render() {
         return (
             <View style={styles.dark}>
@@ -165,7 +195,8 @@ class Contacts extends Component {
                         onChangeText={(contact)=>{this.search(contact)}}
                     />
                     <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
-                    <Text style={styles.headerMenu}>...</Text>
+                    <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }}>&#8942;</Text>
+                    {this.state.headerOptions ? null : <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
                 </View>
                 {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
                 <ScrollView style={styles.scrollViewContainer}>
@@ -205,6 +236,7 @@ const mapStateToProps = (state) => (
     }
 );
 const mapDispatchToProps = (dispatch) => ({
-    createClient: (data) => dispatch(createClient(data))
+    createClient: (data) => dispatch(createClient(data)),
+    logOut:()=> dispatch(logOut()),
 });
 export default connect(mapStateToProps, mapDispatchToProps)(Contacts);

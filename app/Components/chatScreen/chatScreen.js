@@ -8,9 +8,13 @@ import { createClient } from '../../actions/actions';
 import ContactIcon from '../../../assests/chatting.png';
 import ArchiveIcon from '../../../assests/Archive.png';
 import { Dimensions } from 'react-native';
-import Materialicons from 'react-native-vector-icons/MaterialIcons';
-
+import Icon from 'react-native-vector-icons/Octicons';
+import Options from  '../headerOptions/options'
+import { pin_conversation } from '../../actions/actions';
+import OptionPop from './optionsPop';
+import {logOut} from '../../actions/actions'
 const { screenHeight, screenWidth } = Dimensions.get('window');
+
 
 const styles = StyleSheet.create({
   dark: {
@@ -175,6 +179,30 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginTop: 10
   },
+  bodyText: {
+    color: '#e2e2e3',
+    display: 'flex',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 10
+  },
+  pinIcon:{
+    position:'absolute',
+    alignSelf:'center',
+    top: 30,
+    right: 20,
+
+  },
+  popUp:{
+    position:'absolute',
+    alignSelf:'center',
+    right: 40,
+  },
+  popUp1:{
+    position:'absolute',
+    alignSelf:'center',  
+    right: 20,
+  },
   messageOptions: {
     fontSize: 22,
     color: 'white',
@@ -192,6 +220,9 @@ class ChatScreen extends Component {
       isSearch: false,
       searchValue: '',
       searchData: [],
+      chooseOption: false,
+      headerOptions: true,
+      pin:false,
     };
   }
   socket = null;
@@ -234,8 +265,27 @@ class ChatScreen extends Component {
             res.data.data.map(user => {
               if (user.username !== this.props.user.username) {
                 Object.assign(user, { popUp: false })
-                details.push(user);
+                let found = 0;
+                let pin_data = this.props.pin_data;
+                if (pin_data.length === 0) details.push(user);
+                else {
+                  for (let i = 0; i < pin_data.length; i++) {
+                    if (user.id === pin_data[i].id)
+                      found = 1
+                  }
+                  if (found === 0)
+                  {
+                    details.push(user);
+                    found=0
+                  }
+                  else{
+                    found =0
+                    details.unshift(user);
+                  }
+                
               }
+            }
+              // this.setState({ user: details });
             });
             this.setState({ Data: details, usernames: usernames, isEmpty: false });
           }
@@ -316,7 +366,83 @@ class ChatScreen extends Component {
   onConversationClick = (user) => {
     this.props.createClient(user);
     this.props.navigation.navigate('chatRoom');
-}
+  }
+  selectOptions = () => {
+    if (this.state.headerOptions === true) {
+      this.setState({ headerOptions: false,});
+    }
+    else if (this.state.headerOptions=== false) {
+      this.setState({ headerOptions: true,});
+    }
+  }
+  messagePopUp=(user)=> {
+    let data=this.state.Data
+    for(let i=0;i<data.length;i++) {
+      if(data[i].id!==user.id)
+        data[i].popUp=false
+      else data[i].popUp=data[i].popUp?false:true;
+    }
+      this.setState({Data: data});
+    
+  }
+  showProfile=()=>{
+    this.setState({viewOptions:false})
+    this.props.navigation.navigate('profile');
+
+  }
+  logout=()=>{
+    this.props.logOut()
+  }
+    pinContact = (obj) => {
+      let pin_data = this.props.pin_data;
+      let contacts = this.state.Data
+      if (pin_data.length < 3) {
+        pin_data.push(obj)
+        let temp = [], index = 0;
+        for (let i = 0; i < contacts.length; i++) {
+          if (contacts[i].id === obj.id)
+            temp = contacts.splice(i, 1);
+        }
+        contacts.unshift(temp[0])
+        this.props.pin_conversation(pin_data);
+        this.setState({ Data: contacts, chooseOption: true,pin:true });
+      }
+      else {
+        this.setState({ Data: contacts, chooseOption: true,pin:true });
+      }
+    }
+    unPinContact = (obj) => {
+      let pin_data = this.props.pin_data;
+      let contacts = this.state.Data;
+      for (let i = 0; i < contacts.length; i++) {
+        if (contacts[i].id === obj.id)
+          contacts.splice(i, 1);
+      }
+      for (let i = 0; i < pin_data.length; i++) {
+        if (pin_data[i].id === obj.id)
+          pin_data.splice(i, 1);
+      }
+      contacts.push(obj);
+      this.props.pin_conversation(pin_data);
+      this.setState({ Data: contacts, chooseOption: true });
+    }
+    isPin = (obj) => {
+      let pin_data = this.props.pin_data;
+      let found = -1
+      for (let i = 0; i < pin_data.length; i++) {
+        if (pin_data[i].id === obj.id)
+          found = 1;
+      }
+      if (found === -1) return false;
+      else return true;
+    }
+    setPopUpCallBack=()=>{
+      let data=this.state.Data
+      for(let i=0;i<data.length;i++) {
+        data[i].popUp=false;
+      }
+      this.setState({Data: data});
+    }
 
   render() {
     return (
@@ -333,8 +459,10 @@ class ChatScreen extends Component {
               onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
             />
           }
-          <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
-          <Text style={styles.headerMenu} >...</Text>
+          {this.state.headerOptions ? 
+          <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text> :
+          <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
+          <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }} >&#8942;</Text>
         </View>
         {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
         <ScrollView style={styles.scrollViewContainer}>
@@ -344,7 +472,9 @@ class ChatScreen extends Component {
                 return (
                   <View key={index}>
                     {user.client && user.latest &&
-                      <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
+                    <View>
+                      <View >
+                      <TouchableOpacity  style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
                         <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
                         <View>
                           <Text style={styles.bodyTextClient}>{user.client.username}</Text>
@@ -354,19 +484,20 @@ class ChatScreen extends Component {
                           {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
                           {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
                         </View>
-                        <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
-                        <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
-                          <Image style={styles.archiveicon} source={ArchiveIcon} />
-                        </TouchableOpacity>
                       </TouchableOpacity>
+                      <Text style={styles.messageOptions} onPress={() => this.messagePopUp(user)}>&#8942; </Text>
+                      <Text style={styles.pinIcon}>{this.isPin(user)?<Text><Icon size={22} color="white" name="pin" /></Text>:null}</Text>
+                        <View style={styles.popUp}>{user.popUp ?<OptionPop archive={this.onArcheive} pinCallBack={this.pinContact} callBack={this.setPopUpCallBack} unPinCallBack={this.unPinContact} obj={user}/>:null}</View>
+                        </View>
+                      </View>
                     }
                   </View>
                 );
               })}
-              <TouchableOpacity style={styles.archiveContainer} onPress={() => { this.ToArchivedMsgs() }}>
+              {/* <TouchableOpacity style={styles.archiveContainer} onPress={() => { this.ToArchivedMsgs() }}>
                 <Image style={styles.archiveBottomIcon} source={ArchiveIcon} />
                 <Text style={styles.textArchive}>Archived Messages</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
             : null}
           {this.state.searchData.length !== 0 ?
@@ -404,13 +535,17 @@ class ChatScreen extends Component {
 const mapStateToProps = (state) => (
   {
     user: state.user.userDetails,
-    client: state.user.client
+    client: state.user.client,
+    pin_data: state.user.pin_data
   }
 );
 
 
 const mapDispatchToProps = (dispatch) => ({
-  createClient: (data) => dispatch(createClient(data))
+  createClient: (data) => dispatch(createClient(data)),
+  pin_conversation: (data) => dispatch(pin_conversation(data)),
+  logOut:()=> dispatch(logOut()),
+  
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatScreen);

@@ -6,7 +6,9 @@ import { createClient } from '../../actions/actions';
 import ContactIcon from '../../../assests/chatting.png';
 import ArchiveIcon from '../../../assests/Archive.png';
 import { Dimensions } from 'react-native';
-
+import Options from '../headerOptions/options';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {logOut}from '../../actions/actions';
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
@@ -73,6 +75,11 @@ const styles = StyleSheet.create({
         width: screenWidth,
         paddingHorizontal: 15,
         paddingVertical: 10
+    },
+    popUp1: {
+        position: 'absolute',
+        alignSelf: 'center',
+        left: "70%",
     },
     body: {
         display: "flex",
@@ -180,11 +187,14 @@ class Archive extends Component {
             isSearch: false,
             searchValue: '',
             searchData: [],
+            chooseOption: true,
+            headerOptions: true,
+
         };
     }
     componentDidMount() {
         this.getConversations();
-        this.focusListener = this.props.navigation.addListener("focus", () => this.getConversations());
+        this.props.navigation.addListener("focus", () => this.getConversations());
     }
 
     getConversations = () => {
@@ -217,8 +227,23 @@ class Archive extends Component {
                 }
             })
     };
-
-    onUnArcheive = (id) => {
+    selectOptions = () => {
+        if (this.state.headerOptions === true) {
+            this.setState({ headerOptions: false, });
+        }
+        else if (this.state.headerOptions === false) {
+            this.setState({ headerOptions: true, });
+        }
+    }
+    showProfile = () => {
+        this.setState({ viewOptions: false })
+        this.props.navigation.navigate('profile');
+    }
+    logout = () => {
+        this.props.logOut()
+        this.props.navigation.navigate('login');
+    }
+    onArcheive = (id) => {
         axios
             .request({
                 method: "POST",
@@ -235,14 +260,18 @@ class Archive extends Component {
             }).catch((error) => console.log(error))
     }
 
-
+    ToArchivedMsgs = () => {
+        this.props.navigation.navigate('archive');
+    }
+    onContactClick = () => {
+        this.props.navigation.navigate('contacts');
+    }
     getTimeByTimestamp = (timestamp) => {
         let date = new Date(timestamp * 1000);
         let ampm = date.getHours() >= 12 ? 'pm' : 'am';
         let hours = date.getHours() >= 12 ? date.getHours() - 12 : date.getHours();
         return hours + ":" + date.getMinutes() + ampm;
     }
-
     getDurationByTimestamp = (timestamp) => {
         let date = new Date(timestamp * 1000);
         let days = (new Date() - new Date(date.getFullYear(), date.getMonth(), date.getDate())) / (1000 * 60 * 60 * 24);
@@ -270,7 +299,6 @@ class Archive extends Component {
         }
         this.setState({ searchData: searchData });
     }
-
     searchVisible = () => {
         this.setState({
             searchValue: '',
@@ -278,12 +306,10 @@ class Archive extends Component {
             isSearch: this.state.isSearch ? false : true,
         });
     }
-
     onConversationClick = (user) => {
         this.props.createClient(user);
         this.props.navigation.navigate('chatRoom');
     }
-
     render() {
         return (
             <View style={styles.dark}>
@@ -299,8 +325,11 @@ class Archive extends Component {
                             onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
                         />
                     }
-                    <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
-                    <Text style={styles.headerMenu} >...</Text>
+                    {this.state.headerOptions ?
+                        <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text> :
+                        <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
+                    <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }} >&#8942;</Text>
+
                 </View>
                 {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
                 <ScrollView style={styles.scrollViewContainer}>
@@ -320,8 +349,10 @@ class Archive extends Component {
                                                     {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
                                                     {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
                                                 </View>
-                                                <TouchableOpacity style={styles.archive} onPress={() => { this.onUnArcheive(user.id) }}>
-                                                    <Image style={styles.archiveicon} source={ArchiveIcon} />
+                                                {/* <TouchableOpacity style={styles.archive} onPress={() => { this.onUnArcheive(user.id) }}>
+                                                    <Image style={styles.archiveicon} source={ArchiveIcon} /> */}
+                                                <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
+                                                <Text><Icon size={40}  name="unarchive" /></Text>
                                                 </TouchableOpacity>
                                             </TouchableOpacity>
                                         }
@@ -360,18 +391,15 @@ class Archive extends Component {
         );
     }
 }
-
-
 const mapStateToProps = (state) => (
     {
         user: state.user.userDetails,
         client: state.user.client
     }
 );
-
-
 const mapDispatchToProps = (dispatch) => ({
-    createClient: (data) => dispatch(createClient(data))
+    createClient: (data) => dispatch(createClient(data)),
+    logOut:()=> dispatch(logOut()),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Archive);

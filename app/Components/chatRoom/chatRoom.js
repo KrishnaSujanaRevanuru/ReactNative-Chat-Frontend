@@ -378,7 +378,7 @@ class ChatRoom extends Component {
             value={this.state.chatMessage}
             onChangeText={(msg) => { this.handleText(msg) }}
             onFocus={() => { this.setState({ showEmoji: false }) }}
-            onSubmitEditing={() => this.send()}
+            onSubmitEditing={() => this.send(this.state.replyMessageIndex)}
           />
           <TouchableOpacity onPress={() => this.send(this.state.replyMessageIndex)} style={styles.send_btn}>
             <Image style={styles.message_send} source={SendButton} />

@@ -1,4 +1,4 @@
-import { CREATE_CLIENT, FETCH_USER } from "../actions/actions";
+import { CREATE_CLIENT, FETCH_USER ,PIN_CONVERSATION} from "../actions/actions";
 import { USER_LOGIN } from "../actions/actions";
 import { SUBMIT_REGISTER } from "../actions/actions";
 import { LOG_OUT } from "../actions/actions";
@@ -12,7 +12,8 @@ const initialState = {
         profile: '',
         token: ''
     },
-    client: null
+    client: null,
+    pin_data:[] 
 }
 
 const userReducer = (state = initialState, action) => {
@@ -31,6 +32,8 @@ const userReducer = (state = initialState, action) => {
             return initialState;
         case CREATE_CLIENT:
             return Object.assign({}, state, { client: action.payload });
+            case PIN_CONVERSATION:
+                return Object.assign({}, state, { pin_data: action.data });
         default: return state
     }
 
