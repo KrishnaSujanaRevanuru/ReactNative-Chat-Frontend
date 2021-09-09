@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 70 / 2,
     backgroundColor: 'white',
-    top: '90%',
+    top: '85%',
     paddingTop: 15,
     bottom: 0,
     right: 0,
@@ -143,8 +143,8 @@ const styles = StyleSheet.create({
     marginVertical: -5
   },
   BottomProfile: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     left: 10,
     alignItems: 'center',
   },
@@ -316,7 +316,7 @@ class ChatScreen extends Component {
   onConversationClick = (user) => {
     this.props.createClient(user);
     this.props.navigation.navigate('chatRoom');
-  }
+}
 
   render() {
     return (
