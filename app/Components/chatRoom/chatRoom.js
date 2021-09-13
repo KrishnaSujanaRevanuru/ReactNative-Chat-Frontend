@@ -11,13 +11,17 @@ import {
   TouchableOpacity,
   Keyboard
 } from 'react-native';
-import MessagePop from './messagePop';
 import readIcon from '../../../assests/seenTick.png';
 import SendButton from '../../../assests/send.png';
 import deliveredIcon from '../../../assests/deliveredTick.png';
 import { Dimensions } from 'react-native';
 import EmojiSelector, { Categories } from 'react-native-emoji-selector';
 import { Directions } from 'react-native-gesture-handler';
+import { starMsgs } from '../../actions/actions';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import RFIcon from 'react-native-vector-icons/Entypo';
+import Back from 'react-native-vector-icons/MaterialIcons';
+import CheckBox from 'react-native-round-checkbox';
 
 const { screenHeight, screenWidth } = Dimensions.get('window');
 class ChatRoom extends Component {
@@ -31,9 +35,16 @@ class ChatRoom extends Component {
       showEmoji: false,
       reactionData: {},
       tempReaction: false,
-      replyMessageIndex:-1,
+      replyMessageIndex: -1,
+      select: false,
+      isStar: true,
     };
   }
+  selectedMsgs = [];
+  count = 0;
+  firstMessage = ''
+  firstMessageSender = ''
+  replyMessage = ''
   socket = null;
   componentDidMount = () => {
     this.socket = io('https://ptchatindia.herokuapp.com/', {
@@ -43,7 +54,10 @@ class ChatRoom extends Component {
       username: this.props.user.username,
       client2: this.props.client.username,
     });
-    this.socket.once('messages', this.onMessages);
+    this.socket.on('messages', this.onMessages);
+    this.socket.on('message', this.onMessage);
+    this.socket.on('typing-start', this.onTyping);
+    this.socket.on('typing-end', this.onTyping);
   };
 
   componentWillUnmount() {
@@ -66,37 +80,37 @@ class ChatRoom extends Component {
         client2: this.props.client.username,
         messageIds: [data.id],
       });
-      data.readStatus=1;
+      data.readStatus = 1;
     }
     let messages = this.state.messages;
-    Object.assign(data, { messagePopUp: false });
+    Object.assign(data, { messagePopUp: false, isSelect: false });
     messages.push(data);
     this.previousDate = null;
     this.setState({ messages: messages });
   };
 
   onMessages = (data) => {
-    if(this.state.messages && data && this.state.messages.length < data.messages.length){
+    if (this.state.messages && data && this.state.messages.length < data.messages.length) {
       let msgIds = data.messages.filter((msg) => {
         if (msg.readStatus === 0 && this.props.user.username !== msg.username) {
           return msg.id;
         }
-    });
-    if (msgIds && msgIds.length) {
-      this.socket.emit("read_status", {
-        username: this.props.user.username,
-        client2: this.props.client.username,
-        messageIds: msgIds,
       });
+      if (msgIds && msgIds.length) {
+        this.socket.emit("read_status", {
+          username: this.props.user.username,
+          client2: this.props.client.username,
+          messageIds: msgIds,
+        });
+      }
     }
-  }
-    this.setState({messages: data.messages}
-      ,()=>{
+    this.setState({ messages: data.messages }
+      , () => {
         this.socket.on("message", this.onMessage);
         this.socket.on("typing-start", this.onTyping);
         this.socket.on("typing-end", this.onTyping);
       }
-      );
+    );
     this.socket.off('messages', true);
   };
 
@@ -115,29 +129,29 @@ class ChatRoom extends Component {
   };
 
   send = (replyMessageIndex) => {
-    if(replyMessageIndex===-1){
+    if (replyMessageIndex === -1) {
       if (this.state.chatMessage) {
         this.socket.emit('chat', {
-        username: this.props.user.username,
-        client2: this.props.client.username,
-        message: this.state.chatMessage,
+          username: this.props.user.username,
+          client2: this.props.client.username,
+          message: this.state.chatMessage,
         });
-        this.setState({chatMessage: ""});
+        this.setState({ chatMessage: "" });
       }
     }
-    else{
-     if (this.state.chatMessage) {
+    else {
+      if (this.state.chatMessage) {
         this.socket.emit("reply", {
-        username: this.props.user.username,
-        client: this.props.client.username,
-        messageId: this.state.messages[this.state.replyMessageIndex].id,
-        message: this.state.chatMessage
+          username: this.props.user.username,
+          client: this.props.client.username,
+          messageId: this.state.messages[this.state.replyMessageIndex].id,
+          message: this.state.chatMessage
         });
-        this.setState({chatMessage: ""});
+        this.setState({ chatMessage: "" });
       }
     }
-    this.replyMessage=false
-    this.setState({replyMessageIndex:-1,replyMessage:false});
+    this.replyMessage = false
+    this.setState({ replyMessageIndex: -1, replyMessage: false });
   };
 
   onShowEmoji = () => {
@@ -191,44 +205,6 @@ class ChatRoom extends Component {
     }
   };
 
-  messagePopUp = (messageObj) => {
-    let messages = this.state.messages;
-    for (let i = 0; i < messages.length; i++) {
-      if (messages[i].id !== messageObj.id)
-        messages[i].messagePopUp = false;
-      else messages[i].messagePopUp = messages[i].messagePopUp ? false : true;
-    }
-    this.setState({ messages: messages });
-  };
-  firstMessage=''
-  firstMessageSender=''
-  replyMessage=''
-  setMsgPopToFalse = (msgObj,type) => {
-    let messages = this.state.messages;
-    for (let i = 0; i < messages.length; i++) messages[i].messagePopUp = false;
-    switch(type){
-      case 'delete':
-        this.setState({ messages: messages }, () => {
-          this.socket.emit('delete', { username: this.props.user.username, client: this.props.client.username, messageId: msgObj.id })
-          this.socket.once('messages', this.onMessages);
-        })
-        break;
-      case 'reply':
-        for(let i=0;i<messages.length;i++){
-          if(messages[i].id===msgObj.id){
-            this.firstMessage=msgObj.message,
-            this.firstMessageSender=msgObj.username
-            this.replyMessage=true
-            this.setState({replyMessageIndex:i});
-          }
-        }
-        break;
-      case "forward": this.forwardMessages(msgObj); break;
-      default: break;
-    }
-    
-  }
-
   handleReaction = (obj) => {
     if (this.state.showEmoji === false) {
       this.setState({ reactionData: obj, showEmoji: true, tempReaction: true });
@@ -246,24 +222,97 @@ class ChatRoom extends Component {
     this.socket.once('messages', this.onMessages);
     this.setState({ reactionData: {}, showEmoji: false, tempReaction: false });
   }
-  forwardMessages = (msgObj) => {
-    this.props.navigation.navigate('forward',{message:msgObj});
+
+  cancelReply = () => {
+    this.replyMessage = false
+    this.setState({ replyMessageIndex: -1 });
   }
 
-  cancelReply=()=>{
-    this.replyMessage=false
-    this.setState({replyMessageIndex:-1});
+  isStar = (messageObj) => {
+    let starMsgs = this.props.starMsgsArray;
+    let found = -1;
+    if (starMsgs.length === 0) return false;
+    else {
+      for (let i = 0; i < starMsgs.length; i++) {
+        if (starMsgs[i].id === messageObj.id) found = i;
+      }
+      if (found >= 0) return true;
+      else return false;
+    }
   }
+  onSelect = (type) => {
+    let starMsgsArray = this.props.starMsgsArray;
+    let messages = this.state.messages;
+    let temp = [];
+    switch (type) {
+      case 'reply':
+        for (let i = 0; i < messages.length; i++) {
+          if (messages[i].id === this.selectedMsgs[0].id) {
+            this.firstMessage = this.selectedMsgs[0].message;
+            this.firstMessageSender = this.selectedMsgs[0].username;
+            this.replyMessage = true;
+            this.setState({ replyMessageIndex: i });
+          }
+        } break;
+      case 'star':
+        temp = [...starMsgsArray, ...this.selectedMsgs];
+        this.props.starMsgs(temp); break;
+      case 'unstar':
+        temp = starMsgsArray.filter(x => !this.selectedMsgs.filter(y => y.id === x.id).length);
+        this.props.starMsgs(temp); break;
+      case "delete":
+        temp = starMsgsArray.filter(x => !this.selectedMsgs.filter(y => y.id === x.id).length);
+        this.props.starMsgs(temp);
+        for (let i = 0; i < this.selectedMsgs.length; i++) {
+          this.socket.emit('delete', { username: this.props.user.username, client: this.props.client.username, messageId: this.selectedMsgs[i].id })
+          this.socket.once('messages', this.onMessages);
+        } break;
+      case "forward":
+        this.props.navigation.navigate('forward', { message: this.selectedMsgs });
+        break;
+      default: break;
+    }
+    this.selectedMsgs = [];
+    messages = messages.map((obj) => ({ ...obj, isSelect: false, }));
+    this.setState({ select: false, messages: messages, isStar: true });
+  }
+
+  onChange(messageObj, index) {
+    let { messages, isStar, select } = this.state;
+    let starMsgsArray = this.props.starMsgsArray;
+    messages[index].isSelect = messages[index].isSelect ? false : true;
+    if (messages[index].isSelect) this.selectedMsgs.push(messageObj);
+    else {
+      for (let i = 0; i < this.selectedMsgs.length; i++)
+        if (this.selectedMsgs[i].id === messageObj.id) this.selectedMsgs.splice(i, 1);
+    }
+    for (let i = 0; i < starMsgsArray.length; i++) {
+      if (messageObj.id === starMsgsArray[i].id) isStar = false;
+    }
+    this.setState({ messages: messages, isStar: isStar, select: !this.selectedMsgs.length ? false : true });
+  }
+
   render() {
-    const { messages } = this.state;
+    const { messages, select, isStar } = this.state;
     return (
       <View style={styles.chat_room}>
-        <View style={styles.header}>
-          <Text style={styles.back_arrow} onPress={()=>{this.props.navigation.goBack()}}>&#8592;</Text>
-          <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
-          <Text style={styles.headerText}>{this.props.client.username}</Text>
-          <Text style={styles.headerMenu}>...</Text>
-        </View>
+        {!select ?
+          <View style={styles.header}>
+            <Text style={styles.back_arrow} onPress={() => { this.props.navigation.goBack() }}>&#8592;</Text>
+            <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
+            <Text style={styles.headerText}>{this.props.client.username}</Text>
+            <Text style={styles.headerMenu}>...</Text>
+          </View>
+          :
+          <View style={styles.selectHeader}>
+            <TouchableOpacity onPress={() => this.onSelect()}><Text style={styles.selecToBack}><Back size={30} color="white" name="arrow-back-ios" /></Text></TouchableOpacity>
+            {this.selectedMsgs.length <= 1 && <TouchableOpacity onPress={() => this.onSelect("reply")}><Text style={styles.selectOptions}><RFIcon size={30} color="white" name="reply" /></Text></TouchableOpacity>}
+            {isStar ? <TouchableOpacity onPress={() => this.onSelect("star")}><Text style={styles.selectOptions}><Icon size={30} color="white" name="star" /></Text></TouchableOpacity>
+              : <TouchableOpacity onPress={() => this.onSelect("unstar")}><Text style={styles.selectOptions}><Icon size={30} color="white" name="star-off" /></Text></TouchableOpacity>}
+            <TouchableOpacity onPress={() => this.onSelect("delete")}><Text style={styles.selectOptions}><Icon size={30} color="white" name="delete" /></Text></TouchableOpacity>
+            {this.selectedMsgs.length <= 5 && <TouchableOpacity onPress={() => this.onSelect("forward")}><Text style={styles.selectOptions}><RFIcon size={30} color="white" name="forward" /></Text></TouchableOpacity>}
+          </View>}
+
         <ScrollView contentContainerStyle={styles.scrollViewContainer}>
           {messages && !!messages.length && messages.map((message, index) => {
             return (
@@ -272,101 +321,121 @@ class ChatRoom extends Component {
                 {message.username === this.props.user.username ? (
                   <>
                     {message.is_delete !== 1 &&
-                      <View>
+                      <TouchableOpacity 
+                      onLongPress={() => { this.setState({ select: true }), this.onChange(message, index) }} onPress={() => { select ? this.onChange(message, index) : '' }}    >
+                        <View style={{ position: 'absolute', marginTop: '10%' }}>
+                          {select && <CheckBox
+                            size={18}
+                            borderColor={'white'}
+                            backgroundColor={'#06C0F9'}
+                            iconCOlor={'white'} checked={message.isSelect}
+                            onValueChange={() => this.onChange(message, index)}
+                          />}
+                        </View>
                         <View style={styles.msg_right}>
-                        {message.hasOwnProperty('replyId') ? 
+                          {message.hasOwnProperty('replyId') ?
                             <View>
-                            {messages.map((replyMessage,index)=>{
-                              return(
-                                <View key={index}>
-                                  {message.replyId===replyMessage.id ? 
-                                  <View>
-                                    <View style={styles.right_replyMessage_view}>
-                                      <Text style={styles.right_username}>{replyMessage.username}</Text>
-                                      <Text style={styles.message}>{replyMessage.message}</Text>
-                                    </View>
-                                    <View style={styles.replyMessage_left_right}>
-                                      <Text style={styles.right_message}>{message.message}</Text>
-                                      <Text style={styles.msg_time_right}>
-                                        {this.getTimeByTimestamp(message.timestamp)}
-                                        {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
-                                      </Text>
-                                    </View>
-                                  </View>:null}
-                                </View>
-                              )
-                            })}
-                           </View> : <View style={styles.replyMessage_left_right}>
-                             <Text style={styles.right_message}>{message.message}</Text>
-                             <Text style={styles.msg_time_right}>
-                              {this.getTimeByTimestamp(message.timestamp)}
-                              {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
+                              {messages.map((replyMessage, index) => {
+                                return (
+                                  <View key={index}>
+                                    {message.replyId === replyMessage.id ?
+                                      <View>
+                                        <View style={styles.right_replyMessage_view}>
+                                          <Text style={styles.right_username}>{replyMessage.username}</Text>
+                                          <Text style={styles.message}>{replyMessage.message}</Text>
+                                        </View>
+                                        <View style={styles.replyMessage_left_right}>
+                                          <Text style={styles.right_message}>{message.message}</Text>
+                                          <Text style={styles.msg_time_right}>
+                                            {this.isStar(message) ? ' ⭐ ' : ' '}
+                                            {this.getTimeByTimestamp(message.timestamp)}
+                                            {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
+                                          </Text>
+                                        </View>
+                                      </View> : null}
+                                  </View>
+                                )
+                              })}
+                            </View> : <View style={styles.replyMessage_left_right}>
+                              
+                                <Text style={styles.right_message}>{message.message}</Text>
+                              <Text style={styles.msg_time_right}>
+                                {this.isStar(message) ? ' ⭐ ' : ' '}
+                                {this.getTimeByTimestamp(message.timestamp)}
+                                {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
                               </Text>
-                             </View> }
-                             <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
+                            </View>}
                           {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} style={styles.msg_right_reaction}><Text style={{ marginLeft: "3%" }}>{message.reaction}</Text></TouchableOpacity>}
                         </View>
-                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
-                      </View>
+                      </TouchableOpacity>
                     }
                   </>
                 ) : (
                   <>
                     {message.is_delete !== 1 &&
-                  <View style={styles.msg_field_container}>
-                    <View style={styles.msg_left}>
-                      <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}>
-                        {message.hasOwnProperty('replyId') ? 
-                            <View>
-                            {messages.map((replyMessage,index)=>{
-                              console.log("messages",messages);
-                              return(
-                                <View key={index}>
-                                  {message.replyId===replyMessage.id ? 
-                                  <View>
-                                    <View style={styles.left_replyMessage_view}>
-                                      <Text style={styles.left_username}>{replyMessage.username}</Text>
-                                      <Text style={styles.left_message}>{replyMessage.message}</Text>
+                      <TouchableOpacity onLongPress={() => { this.setState({ select: true }), this.onChange(message, index) }} onPress={() => { select ? this.onChange(message, index) : '' }}>
+                        <View style={styles.msg_left}>
+                          {/* <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}> */}
+                          <Text style={styles.message}  >
+                            {message.hasOwnProperty('replyId') ?
+                              <View>
+                                {messages.map((replyMessage, index) => {
+                                  console.log("messages", messages);
+                                  return (
+                                    <View key={index}>
+                                      {message.replyId === replyMessage.id ?
+                                        <View>
+                                          <View style={styles.left_replyMessage_view}>
+                                            <Text style={styles.left_username}>{replyMessage.username}</Text>
+                                            <Text style={styles.left_message}>{replyMessage.message}</Text>
+                                          </View>
+                                          <View style={styles.replyMessage_left_right}>
+                                            <Text style={styles.left_message}>{message.message}</Text>
+                                            <Text style={styles.msg_time_left}>
+                                              {this.isStar(message) ? ' ⭐ ' : ' '}
+                                              {this.getTimeByTimestamp(message.timestamp)}
+                                              {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
+                                            </Text>
+                                          </View>
+                                        </View> : null}
                                     </View>
-                                    <View style={styles.replyMessage_left_right}>
-                                      <Text style={styles.left_message}>{message.message}</Text>
-                                      <Text style={styles.msg_time_left}>
-                                        {this.getTimeByTimestamp(message.timestamp)}
-                                        {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
-                                      </Text>
-                                      <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
-                                    </View>
-                                  </View>:null}
-                                </View>
-                              )
-                            })}
-                           </View> : <View style={styles.replyMessage_left_right}>
-                                      <Text style={styles.left_message}>{message.message}</Text>
-                                    </View> }
-                        <Text style={styles.msg_time_left}>
-                          {this.getTimeByTimestamp(message.timestamp)}
-                        </Text>
-                        <Text style={styles.messageOptions} onPress={() => this.messagePopUp(message)} >&#8942;</Text>
-                      </Text>
-                    </View>
-                    {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} ><Text style={styles.msg_left_reaction}>{message.reaction}</Text></TouchableOpacity>}
-                    <View style={styles.popUp}>{message.messagePopUp ? <MessagePop messageDetails={message} optionsCategorey={"mssgPopup"} callBack={this.setMsgPopToFalse} /> : null}</View>
-                  </View>}
-                </>)}
+                                  )
+                                })}
+                              </View> : <View style={styles.replyMessage_left_right}>
+                                <Text style={styles.left_message}>{message.message}</Text>
+                              </View>}
+                            <Text style={styles.msg_time_left}>
+                              {this.isStar(message) ? ' ⭐ ' : ' '}
+                              {this.getTimeByTimestamp(message.timestamp)}
+                            </Text>
+                          </Text>
+                        </View>
+                        <View style={{ position: 'absolute', marginTop: '9%', alignSelf: 'flex-end' }}>
+                          {select && <CheckBox
+                            size={18}
+                            borderColor={'white'}
+                            backgroundColor={'#06C0F9'}
+                            iconCOlor={'white'} checked={message.isSelect}
+                            onValueChange={() => this.onChange(message, index)}
+                          />}
+                        </View>
+                        {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} ><Text style={styles.msg_left_reaction}>{message.reaction}</Text></TouchableOpacity>}
+                      </TouchableOpacity>}
+                  </>)}
               </View>
             );
           })}
           <View>
-           {this.state.isOponentTyping && <Text style={styles.typing}>{this.props.client.username}  typing...</Text>}
-           </View>
-        </ScrollView>
-        {this.replyMessage ? 
-        <View style={styles.firstMessage_view}>
-          <View style={styles.firstMessage}>
-            <Text style={styles.message_color}>{this.firstMessage}</Text>
+            {this.state.isOponentTyping && <Text style={styles.typing}>{this.props.client.username}  typing...</Text>}
           </View>
-          <View style={styles.cross_mark}><Text style={styles.message_color} onPress={()=>{this.cancelReply()}}>X</Text></View>
-        </View> : null}
+        </ScrollView>
+        {this.replyMessage ?
+          <View style={styles.firstMessage_view}>
+            <View style={styles.firstMessage}>
+              <Text style={styles.message_color}>{this.firstMessage}</Text>
+            </View>
+            <View style={styles.cross_mark}><Text style={styles.message_color} onPress={() => { this.cancelReply() }}>X</Text></View>
+          </View> : null}
         <View style={styles.footer}>
           <TouchableOpacity style={styles.emoji_view} onPress={() => { this.onShowEmoji() }}>
             <Text style={styles.emoji_add}>&#9787;</Text>
@@ -439,6 +508,28 @@ const styles = StyleSheet.create({
     right: 10,
     position: 'absolute'
   },
+  selectHeader: {
+    display: "flex",
+    width: screenWidth,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexDirection: "row",
+    backgroundColor: "#373a3f",
+    paddingHorizontal: 10,
+    paddingVertical: 28
+  },
+  selecToBack: {
+    marginRight: '2%',
+  },
+  checkBox_left: {
+    marginLeft: '1%',
+  },
+  checkBox_right: {
+    marginRight: '1%',
+  },
+  selectOptions: {
+    paddingRight: 10,
+  },
   scrollViewContainer: {
     height: screenHeight,
     width: screenWidth,
@@ -470,24 +561,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
-    marginLeft:5,
-    marginTop:5,
-    marginBottom:'3%',
-    justifyContent:'flex-start',
+    marginLeft: 5,
+    marginTop: 5,
+    marginBottom: '3%',
+    justifyContent: 'flex-start',
   },
   msg_time_right: {
     color: 'white',
     alignSelf: 'flex-end',
-    marginLeft:'3%',
+    marginLeft: '3%',
     marginTop: '2%',
-    fontSize:12
+    fontSize: 12
   },
   msg_time_left: {
     color: 'white',
     alignSelf: 'flex-start',
     marginLeft: '3%',
     marginTop: '2%',
-    fontSize:10
+    fontSize: 12
   },
   emojiContainer: {
     height: '50%',
@@ -533,7 +624,7 @@ const styles = StyleSheet.create({
   emoji_add: {
     color: 'gray',
     fontWeight: 'bold',
-    fontSize:32,
+    fontSize: 32,
   },
   emoji: {
     width: '9%',
@@ -583,8 +674,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'white',
     marginLeft: '2%',
-    marginTop:8,
-    justifyContent:'flex-end',
+    marginTop: 8,
+    justifyContent: 'flex-end',
   },
   messagePopUp: {
     alignSelf: 'flex-start'
@@ -610,89 +701,89 @@ const styles = StyleSheet.create({
     padding: '1.5%',
     marginLeft: '3%'
   },
-  back_arrow:{
+  back_arrow: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize:30,
+    fontSize: 30,
     height: 30,
     width: 30,
-    marginBottom:27
+    marginBottom: 27
   },
-  popUp:{position:'absolute',alignSelf:'center'},
-  firstMessage_view:{
-    backgroundColor:'#1a1a1a',
-    display:'flex',
-    flexDirection:'row',
-    marginBottom:4,
-    marginLeft:20,
-    borderRadius:20,
-    marginRight:20,
-    width:screenWidth,
+  popUp: { position: 'absolute', alignSelf: 'center' },
+  firstMessage_view: {
+    backgroundColor: '#1a1a1a',
+    display: 'flex',
+    flexDirection: 'row',
+    marginBottom: 4,
+    marginLeft: 20,
+    borderRadius: 20,
+    marginRight: 20,
+    width: screenWidth,
   },
-  firstMessage:{
-    marginLeft:10,
-    width:'85%',
-    justifyContent:'flex-start',
-    paddingTop:10,
-    paddingBottom:10,
+  firstMessage: {
+    marginLeft: 10,
+    width: '85%',
+    justifyContent: 'flex-start',
+    paddingTop: 10,
+    paddingBottom: 10,
   },
-  cross_mark:{
-    width:'15%',
-    left:'15%',
+  cross_mark: {
+    width: '15%',
+    left: '15%',
   },
-  message_color:{
-    color:'white',
+  message_color: {
+    color: 'white',
   },
-  right_username:{
-    color:'#ff99ff',
+  right_username: {
+    color: '#ff99ff',
     fontWeight: "bold",
-    paddingLeft:7,
+    paddingLeft: 7,
   },
-  left_username:{
-    color:'#184e34',
+  left_username: {
+    color: '#184e34',
     fontWeight: "bold",
-    paddingLeft:7,
+    paddingLeft: 7,
   },
-  right_replyMessage_view:{
-    backgroundColor:'#184e34',
-    color:'#ffffff',
-    borderRadius:7,
-    borderLeftWidth:3,
-    borderLeftColor:'#ff99ff',
-    paddingRight:10,
-    
+  right_replyMessage_view: {
+    backgroundColor: '#184e34',
+    color: '#ffffff',
+    borderRadius: 7,
+    borderLeftWidth: 3,
+    borderLeftColor: '#ff99ff',
+    paddingRight: 10,
+
   },
-  left_replyMessage_view:{
-    backgroundColor:'#202124',
-    color:'#ffffff',
-    borderRadius:7,
-    borderLeftWidth:3,
-    borderLeftColor:'#184e34',
-    paddingBottom:2,
+  left_replyMessage_view: {
+    backgroundColor: '#202124',
+    color: '#ffffff',
+    borderRadius: 7,
+    borderLeftWidth: 3,
+    borderLeftColor: '#184e34',
+    paddingBottom: 2,
   },
-  left_message:{
+  left_message: {
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
-    marginLeft:5,
-    marginRight:5,
-    marginTop:5,
-    width:screenWidth,
-    justifyContent:'flex-end',
+    marginLeft: 5,
+    marginRight: 5,
+    marginTop: 5,
+    width: screenWidth,
+    justifyContent: 'flex-end',
   },
-  right_message:{
+  right_message: {
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
-    marginLeft:5,
-    marginRight:5,
-    marginTop:5,
-    width:screenWidth,
-    justifyContent:'flex-start',
+    marginLeft: 5,
+    marginRight: 5,
+    marginTop: 5,
+    width: screenWidth,
+    justifyContent: 'flex-start',
   },
-  replyMessage_left_right:{
-    display:'flex',
-    flexDirection:'row'
+  replyMessage_left_right: {
+    display: 'flex',
+    flexDirection: 'row'
   }
 });
 
@@ -701,7 +792,12 @@ const mapStateToProps = state => (
     user: state.user.userDetails,
     client: state.user.client,
     socket: state.socket,
+    starMsgsArray: state.user.starMsgs,
   }
 );
 
-export default connect(mapStateToProps, null)(ChatRoom);
+const mapDispatchToProps = (dispatch) => ({
+  starMsgs: (data) => dispatch(starMsgs(data)),
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatRoom);

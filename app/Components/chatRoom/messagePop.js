@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { connect } from 'react-redux';
+import { starMsgs } from '../../actions/actions';
 
 const styles = StyleSheet.create({
     rightOptions: {
@@ -20,6 +21,49 @@ const styles = StyleSheet.create({
 class MessagePop extends Component {
     constructor(props) {
         super(props);
+    }
+
+    setStarMsgs = (type) => {
+        let messageObj = this.props.messageDetails;
+        let starMsgsArray = this.props.starMsgsArray;
+        let found = -1;
+        switch (type) {
+            case 'star':
+                found = -1;
+                if (starMsgsArray.length === 0) starMsgsArray.push(messageObj);
+                else {
+                    for (let i = 0; i < starMsgsArray.length; i++) {
+                        if (starMsgsArray[i].id === messageObj.id)
+                            found = i;
+                    }
+                    if (found === -1) starMsgsArray.push(messageObj);
+                }
+                break;
+            case 'unStar':
+                found = -1;
+                for (let i = 0; i < starMsgsArray.length; i++) {
+                    if (starMsgsArray[i].id === messageObj.id)
+                        found = i;
+                }
+                starMsgsArray.splice(found, 1);
+                break;
+        }
+        this.props.starMsgs(starMsgsArray);
+        this.props.callBack(this.props.messageDetails,"star");
+    }
+
+    isStar = () => {
+        let messageObj = this.props.messageDetails;
+        let starMsgsArray = this.props.starMsgsArray;
+        let found = -1;
+        if (starMsgsArray.length === 0) return false;
+        else {
+            for (let i = 0; i < starMsgsArray.length; i++) {
+                if (starMsgsArray[i].id === messageObj.id) found = i;
+            }
+            if (found >= 0) return true;
+            else return false;
+        }
     }
 
     deleteMessage = () => {
@@ -43,7 +87,7 @@ class MessagePop extends Component {
                         <TouchableOpacity onPress={() => { this.replyMessage() }}><Text style={styles.optionsMsgText}>Reply</Text></TouchableOpacity>
                         <TouchableOpacity onPress={()=>{this.forward()}}><Text style={styles.optionsMsgText}>Forward Message</Text></TouchableOpacity>
                         <TouchableOpacity onPress={() => { this.deleteMessage() }}><Text style={styles.optionsMsgText}>Delete Message</Text></TouchableOpacity>
-                        <TouchableOpacity><Text style={styles.optionsMsgText}>Star Message</Text></TouchableOpacity>
+                        <TouchableOpacity onPress={() => this.setStarMsgs(this.isStar() ? "unStar" : "star")}><Text style={styles.optionsMsgText}>{this.isStar() ? 'Unstar Message' : 'Star Message'}</Text></TouchableOpacity>
                     </View > : null}
             </View>
         );
@@ -54,8 +98,13 @@ const mapStateToProps = state => (
     {
         user: state.user.userDetails,
         client: state.user.client,
+        starMsgsArray : state.user.starMsgs,
         socket: state.socket,
     }
 );
 
-export default connect(mapStateToProps, null)(MessagePop)
+const mapDispatchToProps = (dispatch) => ({
+    starMsgs: (data) => dispatch(starMsgs(data)),
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(MessagePop)

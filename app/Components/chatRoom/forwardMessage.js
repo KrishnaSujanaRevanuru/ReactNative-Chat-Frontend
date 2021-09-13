@@ -100,13 +100,17 @@ class ForwardMessage extends Component {
     this.state = {
       isRecentChatSelected: null,
       recentChatData: null,
-      isContactSelected: null,
+      isContactSelected: [],
       contactData: null,
     };
   }
   componentDidMount() {
     this.socket = io('https://ptchatindia.herokuapp.com/', {
       transports: ['websocket'],
+    });
+    this.props.navigation.addListener("focus", () => {
+      this.getContacts();
+      this.getConversations();
     });
     this.getConversations();
     this.getContacts();
@@ -229,26 +233,30 @@ class ForwardMessage extends Component {
     this.setState({isContactSelected: selectUser});
   };
   forwardMessages = () => {
-    for (
-      let index = 0;
-      index < this.state.isRecentChatSelected.length;
-      index++
-    ) {
-      if (this.state.isRecentChatSelected[index] === true) {
-        this.recentChatForwardMessageToClient(
-          this.props.route.params.message,
-          index,
-        );
+    for(let msgIndex=0;msgIndex<this.props.route.params.message.length;msgIndex++){
+      for (
+        let index = 0;
+        index < this.state.isRecentChatSelected.length;
+        index++
+      ) {
+        if (this.state.isRecentChatSelected[index] === true) {
+          this.recentChatForwardMessageToClient(
+            this.props.route.params.message[msgIndex],
+            index,
+          );
+        }
       }
     }
+    for(let msgIndex=0;msgIndex<this.props.route.params.message.length;msgIndex++){
     for (let index = 0; index < this.state.isContactSelected.length; index++) {
       if (this.state.isContactSelected[index] === true) {
         this.contactForwardMessageToClient(
-          this.props.route.params.message,
+          this.props.route.params.message[msgIndex],
           index,
         );
       }
     }
+  }
     this.props.navigation.navigate('chatRoom');
   };
 
