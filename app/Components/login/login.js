@@ -3,6 +3,7 @@ import axios from 'axios';
 import { connect } from 'react-redux';
 import { userLogin } from '../../actions/actions';
 import PushNotification from "react-native-push-notification";
+import Loader from '../Loader/loader';
 import {
   View,
   Text,
@@ -76,7 +77,8 @@ class Login extends Component {
       username: "",
       password: "",
       failedLogin: false,
-      isLoading: false
+      isLoading: false,
+      showLoading: false
     };
   }
 
@@ -92,7 +94,7 @@ class Login extends Component {
       }
     )
   }
-  
+
   validationForm = (val, check) => {
     if (check === 'user') {
       if (!val) {
@@ -117,6 +119,7 @@ class Login extends Component {
     this.props.navigation.navigate('registration');
   }
   LoginForm = () => {
+    this.setState({ showLoading: true })
     if (this.state.validationCheck) {
       axios
         .post("https://ptchatindia.herokuapp.com/login", {
@@ -128,61 +131,65 @@ class Login extends Component {
             this.props.userLogin(res.data.data);
             this.props.navigation.navigate('appScreen');
           } else {
-            this.setState({ failedLogin: !this.failedLogin });
+            this.setState({ failedLogin: !this.failedLogin, showLoading: false });
           }
         })
         .catch((err) => {
           console.log(err);
-          this.setState({ failedLogin: !this.failedLogin });
+          this.setState({ failedLogin: !this.failedLogin, showLoading: false });
         });
     }
     else {
-      this.setState({ isValidUserName: true, isValidPassword: true });
+      this.setState({ isValidUserName: true, isValidPassword: true, showLoading: false });
     }
   };
   render() {
     return (
-      <ScrollView style={styles.dark}>
-        <View style={styles.container}>
-          <View>
-            <Text style={styles.heading}>Login Form</Text>
-          </View>
-          <View style={styles.field}>
-            <Text style={styles.text}>User Name</Text>
-            <TextInput style={styles.input}
-              placeholder="Enter Username"
-              onChangeText={text =>
-                this.validationForm(text, 'user')
-              }
-            />
-            {this.state.isValidUserName ? (
-              <Text style={styles.error}>Please Enter valid User Name</Text>
-            ) : null}
-          </View>
-          <View style={styles.field}>
-            <Text style={styles.text}>Password</Text>
-            <TextInput style={styles.input}
-              placeholder="Enter Password"
-              secureTextEntry={true}
-              onChangeText={text =>
-                this.validationForm(text, 'password')
-              }
-            />
-            {this.state.isValidPassword ? (
-              <Text style={styles.error}>Please Enter valid password</Text>
-            ) : null}
-          </View>
-          <Text style={styles.button}>
-            <Button
-              title="Login"
-              onPress={() => {
-                this.LoginForm();
-              }}
-            />
-          </Text>
-          <Text style={styles.registertext} onPress={() => { this.onRegisterClick() }}>Register</Text>
-        </View>
-      </ScrollView>
+      <>
+        {this.state.showLoading ? <Loader /> :
+          <ScrollView style={styles.dark}>
+            <View style={styles.container}>
+              <View>
+                <Text style={styles.heading}>Login Form</Text>
+              </View>
+              <View style={styles.field}>
+                <Text style={styles.text}>User Name</Text>
+                <TextInput style={styles.input}
+                  placeholder="Enter Username"
+                  onChangeText={text =>
+                    this.validationForm(text, 'user')
+                  }
+                />
+                {this.state.isValidUserName ? (
+                  <Text style={styles.error}>Please Enter valid User Name</Text>
+                ) : null}
+              </View>
+              <View style={styles.field}>
+                <Text style={styles.text}>Password</Text>
+                <TextInput style={styles.input}
+                  placeholder="Enter Password"
+                  secureTextEntry={true}
+                  onChangeText={text =>
+                    this.validationForm(text, 'password')
+                  }
+                />
+                {this.state.isValidPassword ? (
+                  <Text style={styles.error}>Please Enter valid password</Text>
+                ) : null}
+              </View>
+              <Text style={styles.button}>
+                <Button
+                  title="Login"
+                  onPress={() => {
+                    this.LoginForm();
+                  }}
+                />
+              </Text>
+              <Text style={styles.registertext} onPress={() => { this.onRegisterClick() }}>Register</Text>
+            </View>
+          </ScrollView>
+        }
+      </>
     );
   }
 }

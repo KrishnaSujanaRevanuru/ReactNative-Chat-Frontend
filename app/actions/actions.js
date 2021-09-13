@@ -33,6 +33,7 @@ export const createClient = (data) => ({
 });
 export const pin_conversation = (data) => ({
     type: PIN_CONVERSATION,
+    data
 });
 
 export const starMsgs = (data) => ({

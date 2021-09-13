@@ -9,11 +9,12 @@ import ContactIcon from '../../../assests/chatting.png';
 import ArchiveIcon from '../../../assests/Archive.png';
 import { Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Octicons';
-import Options from  '../headerOptions/options'
+import Options from '../headerOptions/options'
 import { pin_conversation } from '../../actions/actions';
 import OptionPop from './optionsPop';
-import {logOut} from '../../actions/actions';
-import {NavigationActions} from 'react-navigation';
+import { logOut } from '../../actions/actions';
+import { NavigationActions } from 'react-navigation';
+import Loader from '../Loader/loader';
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
 
@@ -187,21 +188,21 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 10
   },
-  pinIcon:{
-    position:'absolute',
-    alignSelf:'center',
+  pinIcon: {
+    position: 'absolute',
+    alignSelf: 'center',
     top: 30,
     right: 20,
 
   },
-  popUp:{
-    position:'absolute',
-    alignSelf:'center',
+  popUp: {
+    position: 'absolute',
+    alignSelf: 'center',
     right: 40,
   },
-  popUp1:{
-    position:'absolute',
-    alignSelf:'center',  
+  popUp1: {
+    position: 'absolute',
+    alignSelf: 'center',
     right: 20,
   },
   messageOptions: {
@@ -223,11 +224,13 @@ class ChatScreen extends Component {
       searchData: [],
       chooseOption: false,
       headerOptions: true,
-      pin:false,
+      pin: false,
+      showloader: false
     };
   }
   socket = null;
   componentDidMount() {
+    this.setState({ showloader: true })
     this.getConversations();
     this.focusListener = this.props.navigation.addListener("focus", () => this.getConversations());
     this.socket = io('https://ptchatindia.herokuapp.com/', {
@@ -274,24 +277,22 @@ class ChatScreen extends Component {
                     if (user.id === pin_data[i].id)
                       found = 1
                   }
-                  if (found === 0)
-                  {
+                  if (found === 0) {
                     details.push(user);
-                    found=0
+                    found = 0
                   }
-                  else{
-                    found =0
+                  else {
+                    found = 0
                     details.unshift(user);
                   }
-                
+
+                }
               }
-            }
-              // this.setState({ user: details });
             });
-            this.setState({ Data: details, usernames: usernames, isEmpty: false });
+            this.setState({ Data: details, usernames: usernames, isEmpty: false, showloader: false });
           }
           else {
-            this.setState({ isEmpty: true });
+            this.setState({ isEmpty: true, showloader: false });
           }
         }
       })
@@ -370,163 +371,167 @@ class ChatScreen extends Component {
   }
   selectOptions = () => {
     if (this.state.headerOptions === true) {
-      this.setState({ headerOptions: false,});
+      this.setState({ headerOptions: false, });
     }
-    else if (this.state.headerOptions=== false) {
-      this.setState({ headerOptions: true,});
+    else if (this.state.headerOptions === false) {
+      this.setState({ headerOptions: true, });
     }
   }
-  messagePopUp=(user)=> {
-    let data=this.state.Data
-    for(let i=0;i<data.length;i++) {
-      if(data[i].id!==user.id)
-        data[i].popUp=false
-      else data[i].popUp=data[i].popUp?false:true;
+  messagePopUp = (user) => {
+    let data = this.state.Data
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].id !== user.id)
+        data[i].popUp = false
+      else data[i].popUp = data[i].popUp ? false : true;
     }
-      this.setState({Data: data});
-    
+    this.setState({ Data: data });
+
   }
-  showProfile=()=>{
-    this.setState({viewOptions:false})
+  showProfile = () => {
+    this.setState({ viewOptions: false })
     this.props.navigation.navigate('profile');
   }
-  logout=()=>{
+  logout = () => {
     this.props.logOut()
     this.props.navigation.navigate('authenticateApp');
   }
-    pinContact = (obj) => {
-      let pin_data = this.props.pin_data;
-      let contacts = this.state.Data
-      if (pin_data.length < 3) {
-        pin_data.push(obj)
-        let temp = [], index = 0;
-        for (let i = 0; i < contacts.length; i++) {
-          if (contacts[i].id === obj.id)
-            temp = contacts.splice(i, 1);
-        }
-        contacts.unshift(temp[0])
-        this.props.pin_conversation(pin_data);
-        this.setState({ Data: contacts, chooseOption: true, });
-      }
-      else {
-        this.setState({ Data: contacts, chooseOption: true,pin:true });
-      }
-    }
-    unPinContact = (obj) => {
-      let pin_data = this.props.pin_data;
-      let contacts = this.state.Data;
+  pinContact = (obj) => {
+    let pin_data = this.props.pin_data;
+    let contacts = this.state.Data
+    if (pin_data.length < 3) {
+      pin_data.push(obj)
+      let temp = [], index = 0;
       for (let i = 0; i < contacts.length; i++) {
         if (contacts[i].id === obj.id)
-          contacts.splice(i, 1);
+          temp = contacts.splice(i, 1);
       }
-      for (let i = 0; i < pin_data.length; i++) {
-        if (pin_data[i].id === obj.id)
-          pin_data.splice(i, 1);
-      }
-      contacts.push(obj);
+      contacts.unshift(temp[0])
       this.props.pin_conversation(pin_data);
-      this.setState({ Data: contacts, chooseOption: true });
+      this.setState({ Data: contacts, chooseOption: true, });
     }
-    isPin = (obj) => {
-      let pin_data = this.props.pin_data;
-      let found = -1
-      for (let i = 0; i < pin_data.length; i++) {
-        if (pin_data[i].id === obj.id)
-          found = 1;
-      }
-      if (found === -1) return false;
-      else return true;
+    else {
+      this.setState({ Data: contacts, chooseOption: true, pin: true });
     }
-    setPopUpCallBack=()=>{
-      let data=this.state.Data
-      for(let i=0;i<data.length;i++) {
-        data[i].popUp=false;
-      }
-      this.setState({Data: data});
+  }
+  unPinContact = (obj) => {
+    let pin_data = this.props.pin_data;
+    let contacts = this.state.Data;
+    for (let i = 0; i < contacts.length; i++) {
+      if (contacts[i].id === obj.id)
+        contacts.splice(i, 1);
     }
+    for (let i = 0; i < pin_data.length; i++) {
+      if (pin_data[i].id === obj.id)
+        pin_data.splice(i, 1);
+    }
+    contacts.push(obj);
+    this.props.pin_conversation(pin_data);
+    this.setState({ Data: contacts, chooseOption: true });
+  }
+  isPin = (obj) => {
+    let pin_data = this.props.pin_data;
+    let found = -1
+    for (let i = 0; i < pin_data.length; i++) {
+      if (pin_data[i].id === obj.id)
+        found = 1;
+    }
+    if (found === -1) return false;
+    else return true;
+  }
+  setPopUpCallBack = () => {
+    let data = this.state.Data
+    for (let i = 0; i < data.length; i++) {
+      data[i].popUp = false;
+    }
+    this.setState({ Data: data });
+  }
 
   render() {
     return (
       <View style={styles.dark}>
-        <View style={styles.header}>
-          <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
-          <Text style={styles.headerText}>Conversations</Text>
-          {this.state.isSearch &&
-            <TextInput
-              placeholder="Search Here..."
-              placeholderTextColor='white'
-              style={styles.headerInput}
-              value={this.state.searchValue}
-              onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
-            />
-          }
-          {this.state.headerOptions ? 
-          <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text> :
-          <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
-          <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }} >&#8942;</Text>
-        </View>
-        {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
-        <ScrollView style={styles.scrollViewContainer}>
-          {this.state.searchValue.length === 0 ?
-            <View>
-              {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
-                return (
-                  <View key={index}>
-                    {user.client && user.latest &&
-                    <View>
-                      <View >
-                      <TouchableOpacity  style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
-                        <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
-                        <View>
-                          <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                          <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
-                        </View>
-                        <View style={styles.timeContainer}>
-                          {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
-                          {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
-                        </View>
-                      </TouchableOpacity>
-                      <Text style={styles.messageOptions} onPress={() => this.messagePopUp(user)}>&#8942; </Text>
-                      <Text style={styles.pinIcon}>{this.isPin(user)?<Text><Icon size={22} color="white" name="pin" /></Text>:null}</Text>
-                        <View style={styles.popUp}>{user.popUp ?<OptionPop archive={this.onArcheive} pinCallBack={this.pinContact} callBack={this.setPopUpCallBack} unPinCallBack={this.unPinContact} obj={user}/>:null}</View>
-                        </View>
-                      </View>
-                    }
-                  </View>
-                );
-              })}
-             {this.state.pin? <View>
-              <Text style={{color:"white"}}>we can't pin more than 3 conversations</Text>
-              <Text style={{color:"white"}}onPress={()=>{this.setState({pin:false})}}>X</Text>
-              </View>:null}
+        {this.state.showloader ? <Loader /> :
+          <>
+            <View style={styles.header}>
+              <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
+              <Text style={styles.headerText}>Conversations</Text>
+              {this.state.isSearch &&
+                <TextInput
+                  placeholder="Search Here..."
+                  placeholderTextColor='white'
+                  style={styles.headerInput}
+                  value={this.state.searchValue}
+                  onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
+                />
+              }
+              {this.state.headerOptions ?
+                <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text> :
+                <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
+              <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }} >&#8942;</Text>
             </View>
-            : null}
-          {this.state.searchData.length !== 0 ?
-            this.state.searchData.map((user, index) => {
-              return (
-                <View key={index} style={styles.body}>
-                  <View style={styles.containerBody}>
-                    <Image
-                      style={styles.bodyProfile}
-                      source={{
-                        uri: user.client.profile,
-                      }}
-                    />
-                  </View>
-                  <View style={styles.bodyTitle}>
-                    <Text style={styles.bodyText}>{user.client.username}</Text>
-                  </View>
+            {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
+            <ScrollView style={styles.scrollViewContainer}>
+              {this.state.searchValue.length === 0 ?
+                <View>
+                  {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
+                    return (
+                      <View key={index}>
+                        {user.client && user.latest &&
+                          <View>
+                            <View >
+                              <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
+                                <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
+                                <View>
+                                  <Text style={styles.bodyTextClient}>{user.client.username}</Text>
+                                  <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                                </View>
+                                <View style={styles.timeContainer}>
+                                  {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
+                                  {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
+                                </View>
+                              </TouchableOpacity>
+                              <Text style={styles.messageOptions} onPress={() => this.messagePopUp(user)}>&#8942; </Text>
+                              <Text style={styles.pinIcon}>{this.isPin(user) ? <Text><Icon size={22} color="white" name="pin" /></Text> : null}</Text>
+                              <View style={styles.popUp}>{user.popUp ? <OptionPop archive={this.onArcheive} pinCallBack={this.pinContact} callBack={this.setPopUpCallBack} unPinCallBack={this.unPinContact} obj={user} /> : null}</View>
+                            </View>
+                          </View>
+                        }
+                      </View>
+                    );
+                  })}
+                  {this.state.pin ? <View>
+                    <Text style={{ color: "white" }}>we can't pin more than 3 conversations</Text>
+                    <Text style={{ color: "white" }} onPress={() => { this.setState({ pin: false }) }}>X</Text>
+                  </View> : null}
                 </View>
-              )
-            }) :
-            (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
-              <Text style={styles.notFound}>Not Found</Text> : null}
-        </ScrollView>
-        <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
-          <Image
-            style={styles.BottomProfile}
-            source={ContactIcon} />
-        </TouchableOpacity>
+                : null}
+              {this.state.searchData.length !== 0 ?
+                this.state.searchData.map((user, index) => {
+                  return (
+                    <View key={index} style={styles.body}>
+                      <View style={styles.containerBody}>
+                        <Image
+                          style={styles.bodyProfile}
+                          source={{
+                            uri: user.client.profile,
+                          }}
+                        />
+                      </View>
+                      <View style={styles.bodyTitle}>
+                        <Text style={styles.bodyText}>{user.client.username}</Text>
+                      </View>
+                    </View>
+                  )
+                }) :
+                (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
+                  <Text style={styles.notFound}>Not Found</Text> : null}
+            </ScrollView>
+            <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
+              <Image
+                style={styles.BottomProfile}
+                source={ContactIcon} />
+            </TouchableOpacity>
+          </>
+        }
       </View>
     );
   }
@@ -545,8 +550,8 @@ const mapStateToProps = (state) => (
 const mapDispatchToProps = (dispatch) => ({
   createClient: (data) => dispatch(createClient(data)),
   pin_conversation: (data) => dispatch(pin_conversation(data)),
-  logOut:()=> dispatch(logOut()),
-  
+  logOut: () => dispatch(logOut()),
+
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatScreen);
