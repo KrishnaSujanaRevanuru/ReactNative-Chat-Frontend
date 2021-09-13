@@ -12,6 +12,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Materialicons from 'react-native-vector-icons/MaterialIcons';
+import Profile from '../Components/headerOptions/profile';
 
 const TabNavigator = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
@@ -27,6 +28,7 @@ class Tab extends Component {
               if (route.name === 'chatScreen') iconName = 'home';
               else if (route.name === 'contacts') iconName = 'contacts';
               else if (route.name === 'archive') iconName = 'archive';
+              else if (route.name === 'profile') iconName = 'person';
               return <Materialicons name={iconName} size={size} color={color} />;
             },
             tabBarShowLabel: false,
@@ -40,6 +42,7 @@ class Tab extends Component {
           <TabNavigator.Screen name="chatScreen" component={ChatScreen} options={{ header: () => null }} />
           <TabNavigator.Screen name="contacts" component={Contacts} options={{ header: () => null }} />
           <TabNavigator.Screen name="archive" component={Archive} options={{ header: () => null }} />
+          <TabNavigator.Screen name="profile" component={Profile} options={{ header: () => null }} />
         </TabNavigator.Navigator>
     );
   }
