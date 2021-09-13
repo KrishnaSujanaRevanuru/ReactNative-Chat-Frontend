@@ -8,7 +8,9 @@ import ArchiveIcon from '../../../assests/Archive.png';
 import { Dimensions } from 'react-native';
 import Options from '../headerOptions/options';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {logOut}from '../../actions/actions';
+import { logOut } from '../../actions/actions';
+import Loader from '../Loader/loader';
+
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
@@ -189,10 +191,11 @@ class Archive extends Component {
             searchData: [],
             chooseOption: true,
             headerOptions: true,
-
+            showloader: false
         };
     }
     componentDidMount() {
+        this.setState({ showloader: true })
         this.getConversations();
         this.props.navigation.addListener("focus", () => this.getConversations());
     }
@@ -219,10 +222,10 @@ class Archive extends Component {
                                 details.push(user);
                             }
                         });
-                        this.setState({ Data: details, usernames: usernames, isEmpty: false });
+                        this.setState({ Data: details, usernames: usernames, isEmpty: false, showloader: false });
                     }
                     else {
-                        this.setState({ isEmpty: true });
+                        this.setState({ isEmpty: true, showloader: false });
                     }
                 }
             })
@@ -312,82 +315,86 @@ class Archive extends Component {
     }
     render() {
         return (
-            <View style={styles.dark}>
-                <View style={styles.header}>
-                    <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
-                    <Text style={styles.headerText}>Archive Chats</Text>
-                    {this.state.isSearch &&
-                        <TextInput
-                            placeholder="Search Here..."
-                            placeholderTextColor='white'
-                            style={styles.headerInput}
-                            value={this.state.searchValue}
-                            onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
-                        />
-                    }
-                    {this.state.headerOptions ?
-                        <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text> :
-                        <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
-                    <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }} >&#8942;</Text>
+            <>
+                {this.state.showloader ? <Loader /> :
+                    <View style={styles.dark}>
+                        <View style={styles.header}>
+                            <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
+                            <Text style={styles.headerText}>Archive Chats</Text>
+                            {this.state.isSearch &&
+                                <TextInput
+                                    placeholder="Search Here..."
+                                    placeholderTextColor='white'
+                                    style={styles.headerInput}
+                                    value={this.state.searchValue}
+                                    onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
+                                />
+                            }
+                            {this.state.headerOptions ?
+                                <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text> :
+                                <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
+                            <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }} >&#8942;</Text>
 
-                </View>
-                {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
-                <ScrollView style={styles.scrollViewContainer}>
-                    {this.state.searchValue.length === 0 ?
-                        <View>
-                            {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
-                                return (
-                                    <View key={index}>
-                                        {user.client && user.latest &&
-                                            <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
-                                                <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
-                                                <View>
-                                                    <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                                    <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
-                                                </View>
-                                                <View style={styles.timeContainer}>
-                                                    {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
-                                                    {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
-                                                </View>
-                                                {/* <TouchableOpacity style={styles.archive} onPress={() => { this.onUnArcheive(user.id) }}>
-                                                    <Image style={styles.archiveicon} source={ArchiveIcon} /> */}
-                                                <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
-                                                <Text><Icon size={40}  name="unarchive" /></Text>
-                                                </TouchableOpacity>
-                                            </TouchableOpacity>
-                                        }
-                                    </View>
-                                );
-                            })}
                         </View>
-                        : null}
-                    {this.state.searchData.length !== 0 ?
-                        this.state.searchData.map((user, index) => {
-                            return (
-                                <View key={index} style={styles.body}>
-                                    <View style={styles.containerBody}>
-                                        <Image
-                                            style={styles.bodyProfile}
-                                            source={{
-                                                uri: user.client.profile,
-                                            }}
-                                        />
-                                    </View>
-                                    <View style={styles.bodyTitle}>
-                                        <Text style={styles.bodyText}>{user.client.username}</Text>
-                                    </View>
+                        {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
+                        <ScrollView style={styles.scrollViewContainer}>
+                            {this.state.searchValue.length === 0 ?
+                                <View>
+                                    {this.state.Data && !!this.state.Data.length && this.state.Data.map((user, index) => {
+                                        return (
+                                            <View key={index}>
+                                                {user.client && user.latest &&
+                                                    <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
+                                                        <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
+                                                        <View>
+                                                            <Text style={styles.bodyTextClient}>{user.client.username}</Text>
+                                                            <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                                                        </View>
+                                                        <View style={styles.timeContainer}>
+                                                            {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
+                                                            {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
+                                                        </View>
+                                                        {/* <TouchableOpacity style={styles.archive} onPress={() => { this.onUnArcheive(user.id) }}>
+                                                    <Image style={styles.archiveicon} source={ArchiveIcon} /> */}
+                                                        <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
+                                                            <Text><Icon size={40} name="unarchive" /></Text>
+                                                        </TouchableOpacity>
+                                                    </TouchableOpacity>
+                                                }
+                                            </View>
+                                        );
+                                    })}
                                 </View>
-                            )
-                        }) :
-                        (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
-                            <Text style={styles.notFound}>Not Found</Text> : null}
-                </ScrollView>
-                <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
-                    <Image
-                        style={styles.BottomProfile}
-                        source={ContactIcon} />
-                </TouchableOpacity>
-            </View>
+                                : null}
+                            {this.state.searchData.length !== 0 ?
+                                this.state.searchData.map((user, index) => {
+                                    return (
+                                        <View key={index} style={styles.body}>
+                                            <View style={styles.containerBody}>
+                                                <Image
+                                                    style={styles.bodyProfile}
+                                                    source={{
+                                                        uri: user.client.profile,
+                                                    }}
+                                                />
+                                            </View>
+                                            <View style={styles.bodyTitle}>
+                                                <Text style={styles.bodyText}>{user.client.username}</Text>
+                                            </View>
+                                        </View>
+                                    )
+                                }) :
+                                (this.state.searchData.length === 0 && this.state.searchValue.length !== 0) ?
+                                    <Text style={styles.notFound}>Not Found</Text> : null}
+                        </ScrollView>
+                        <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
+                            <Image
+                                style={styles.BottomProfile}
+                                source={ContactIcon} />
+                        </TouchableOpacity>
+                    </View>
+                }
+            </>
         );
     }
 }
@@ -399,7 +406,7 @@ const mapStateToProps = (state) => (
 );
 const mapDispatchToProps = (dispatch) => ({
     createClient: (data) => dispatch(createClient(data)),
-    logOut:()=> dispatch(logOut()),
+    logOut: () => dispatch(logOut()),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Archive);

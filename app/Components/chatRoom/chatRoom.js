@@ -54,10 +54,7 @@ class ChatRoom extends Component {
       username: this.props.user.username,
       client2: this.props.client.username,
     });
-    this.socket.on('messages', this.onMessages);
-    this.socket.on('message', this.onMessage);
-    this.socket.on('typing-start', this.onTyping);
-    this.socket.on('typing-end', this.onTyping);
+    this.socket.once('messages', this.onMessages);
   };
 
   componentWillUnmount() {
@@ -321,8 +318,8 @@ class ChatRoom extends Component {
                 {message.username === this.props.user.username ? (
                   <>
                     {message.is_delete !== 1 &&
-                      <TouchableOpacity 
-                      onLongPress={() => { this.setState({ select: true }), this.onChange(message, index) }} onPress={() => { select ? this.onChange(message, index) : '' }}    >
+                      <TouchableOpacity
+                        onLongPress={() => { this.setState({ select: true }), this.onChange(message, index) }} onPress={() => { select ? this.onChange(message, index) : '' }}    >
                         <View style={{ position: 'absolute', marginTop: '10%' }}>
                           {select && <CheckBox
                             size={18}
@@ -357,8 +354,8 @@ class ChatRoom extends Component {
                                 )
                               })}
                             </View> : <View style={styles.replyMessage_left_right}>
-                              
-                                <Text style={styles.right_message}>{message.message}</Text>
+
+                              <Text style={styles.right_message}>{message.message}</Text>
                               <Text style={styles.msg_time_right}>
                                 {this.isStar(message) ? ' ⭐ ' : ' '}
                                 {this.getTimeByTimestamp(message.timestamp)}
