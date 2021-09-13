@@ -12,7 +12,8 @@ import Icon from 'react-native-vector-icons/Octicons';
 import Options from  '../headerOptions/options'
 import { pin_conversation } from '../../actions/actions';
 import OptionPop from './optionsPop';
-import {logOut} from '../../actions/actions'
+import {logOut} from '../../actions/actions';
+import {NavigationActions} from 'react-navigation';
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
 
@@ -388,10 +389,10 @@ class ChatScreen extends Component {
   showProfile=()=>{
     this.setState({viewOptions:false})
     this.props.navigation.navigate('profile');
-
   }
   logout=()=>{
     this.props.logOut()
+    this.props.navigation.navigate('authenticateApp');
   }
     pinContact = (obj) => {
       let pin_data = this.props.pin_data;
@@ -405,7 +406,7 @@ class ChatScreen extends Component {
         }
         contacts.unshift(temp[0])
         this.props.pin_conversation(pin_data);
-        this.setState({ Data: contacts, chooseOption: true,pin:true });
+        this.setState({ Data: contacts, chooseOption: true, });
       }
       else {
         this.setState({ Data: contacts, chooseOption: true,pin:true });
@@ -494,10 +495,10 @@ class ChatScreen extends Component {
                   </View>
                 );
               })}
-              {/* <TouchableOpacity style={styles.archiveContainer} onPress={() => { this.ToArchivedMsgs() }}>
-                <Image style={styles.archiveBottomIcon} source={ArchiveIcon} />
-                <Text style={styles.textArchive}>Archived Messages</Text>
-              </TouchableOpacity> */}
+             {this.state.pin? <View>
+              <Text style={{color:"white"}}>we can't pin more than 3 conversations</Text>
+              <Text style={{color:"white"}}onPress={()=>{this.setState({pin:false})}}>X</Text>
+              </View>:null}
             </View>
             : null}
           {this.state.searchData.length !== 0 ?

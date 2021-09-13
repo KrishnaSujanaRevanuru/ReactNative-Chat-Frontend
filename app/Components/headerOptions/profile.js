@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { connect } from 'react-redux';
-import Options from './options'
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const styles = StyleSheet.create({
@@ -11,7 +10,6 @@ const styles = StyleSheet.create({
         height: "60%",
         marginLeft: "10%",
         borderRadius: 20
-
     },
     header: {
         display: 'flex',
@@ -31,17 +29,12 @@ const styles = StyleSheet.create({
         backgroundColor: "white"
     },
     headerMenu: {
-
         backgroundColor: "#50535a",
         width: "40%",
         height: 60,
         left: "50%",
         top: "5%",
     },
-
-    //   headerTitle: {
-
-    //   },
     headerText: {
         color: "white",
         marginTop: 20,
@@ -71,7 +64,6 @@ const styles = StyleSheet.create({
         fontSize: 17,
         flex: 0.5,
         top: 10
-
     },
     headerMenuText: {
         width: "50%",
@@ -109,8 +101,6 @@ class Profile extends Component {
             viewprofilestatus: false,
             viewOptions: false
         };
-
-        // this.viewprofilestatus=false
     }
     selectOptions = () => {
         if (this.state.viewOptions === false) {
@@ -129,7 +119,6 @@ class Profile extends Component {
     }
     viewProfile = () => {
         if (this.state.viewprofilestatus === false) {
-            console.log('viewProfile');
             this.setState({ viewProfileImage: true, viewprofilestatus: true });
         }
         else if (this.state.viewprofilestatus === true) {
@@ -137,7 +126,6 @@ class Profile extends Component {
         }
     }
     render() {
-        console.log("in profile", this.props.user);
         return (
             <View style={styles.dark} >
                 <View style={styles.header}>

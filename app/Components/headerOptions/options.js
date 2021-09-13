@@ -1,10 +1,6 @@
 import React, { Component } from 'react';
-// import  Profile from'./profile';
-// import ChatScreen from '../chatScreen/chatScreen'
 import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
-
 const styles = StyleSheet.create({
-
     rightOptions: {
         backgroundColor: "#8a8787",
         alignItems: 'center',
@@ -32,7 +28,6 @@ class Options extends Component {
     }
     showPofile = () => {
         this.setState({ showprofile: true });
-
     }
     render() {
         return (
