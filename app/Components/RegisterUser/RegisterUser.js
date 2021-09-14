@@ -79,10 +79,10 @@ class Registration extends React.Component {
     Submit = () => {
         this.setState({ showloading: true })
         if (this.state.username === "" || this.state.email === "" || this.state.number === "" || this.state.password === "", this.state.confirm_password === "") {
-            this.setState({ RegisterError: "some fields are empty" })
+            this.setState({ RegisterError: "some fields are empty", showloading: false })
         }
         else if (this.error.username !== false || this.error.email !== false || this.error.number !== false || this.error.password !== false || this.error.cpassword !== false) {
-            this.setState({ RegisterError: "enter valid details" })
+            this.setState({ RegisterError: "enter valid details", showloading: false })
         }
         else {
             let userDetails = {
@@ -109,6 +109,7 @@ class Registration extends React.Component {
     }
 
     onLoginClick = () => {
+        this.setState({ RegisterError: '' })
         this.props.navigation.navigate('login');
     }
 
@@ -138,7 +139,6 @@ class Registration extends React.Component {
         })
     }
     render() {
-        console.log("state", this.state);
         const InputData = [
             { Field: "Username", type: "default", placeholder: "Enter Username", usernameError: "enter valid username" },
             { Field: "Email", type: "email-address", placeholder: "Enter Email", emailError: "enter valid email" },
@@ -149,32 +149,34 @@ class Registration extends React.Component {
         const { photo } = this.state;
         return (
             <ScrollView contentContainerStyle={styles.bg_color}>
-                <View style={styles.container}>
-                    <Text style={styles.mainError}>{this.state.RegisterError}</Text>
-                    <Text style={styles.heading}>REGISTER</Text>
-                    <View style={styles.sub_container}>
-                        {InputData.map((input, index) =>
-                        (
-                            <View style={styles.padding1} key={index}>
-                                <Text style={styles.text}>{input.Field}</Text>
-                                <TextInput keyboardType={input.type} placeholder={input.placeholder} style={styles.input} maxLength={input.Field === 'Number' ? 10 : null} secureTextEntry={(input.Field === 'Password' || input.Field === 'Confirm Password') ? true : false} onChangeText={(value) => { this.Validate(input.Field, value) }}></TextInput>
-                                {this.error.username ? <Text style={styles.error}>{input.usernameError}</Text> : null}
-                                {this.error.email ? <Text style={styles.error}>{input.emailError}</Text> : null}
-                                {this.error.number ? <Text style={styles.error}>{input.numberError}</Text> : null}
-                                {this.error.password ? <Text style={styles.error}>{input.passwordError}</Text> : null}
-                                {this.error.cpassword ? <Text style={styles.error}>{input.cPasswordError}</Text> : null}
-                            </View>
-                        )
-                        )}
-                        <Text style={styles.profilePicText} onPress={this.pickImage}>
-                            {this.state.picSelected ? <Image source={{ uri: this.state.profilePic && this.state.profilePic }} style={styles.profilePic} />
-                                : <Image source={{ uri: 'https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg' }} style={styles.profilePic} />}
-                        </Text>
-                        <Text style={styles.image_warning} >{this.state.imageError && this.state.imageError}</Text>
-                        <Button title="SUBMIT" color='purple' onPress={() => this.Submit()} />
-                        <Text style={styles.loginText} onPress={() => { this.onLoginClick() }}>Login</Text>
+                {this.state.showloading ? <Loader /> :
+                    <View style={styles.container}>
+                        <Text style={styles.mainError}>{this.state.RegisterError}</Text>
+                        <Text style={styles.heading}>REGISTER</Text>
+                        <View style={styles.sub_container}>
+                            {InputData.map((input, index) =>
+                            (
+                                <View style={styles.padding1} key={index}>
+                                    <Text style={styles.text}>{input.Field}</Text>
+                                    <TextInput keyboardType={input.type} placeholder={input.placeholder} style={styles.input} maxLength={input.Field === 'Number' ? 10 : null} secureTextEntry={(input.Field === 'Password' || input.Field === 'Confirm Password') ? true : false} onChangeText={(value) => { this.Validate(input.Field, value) }}></TextInput>
+                                    {this.error.username ? <Text style={styles.error}>{input.usernameError}</Text> : null}
+                                    {this.error.email ? <Text style={styles.error}>{input.emailError}</Text> : null}
+                                    {this.error.number ? <Text style={styles.error}>{input.numberError}</Text> : null}
+                                    {this.error.password ? <Text style={styles.error}>{input.passwordError}</Text> : null}
+                                    {this.error.cpassword ? <Text style={styles.error}>{input.cPasswordError}</Text> : null}
+                                </View>
+                            )
+                            )}
+                            <Text style={styles.profilePicText} onPress={this.pickImage}>
+                                {this.state.picSelected ? <Image source={{ uri: this.state.profilePic && this.state.profilePic }} style={styles.profilePic} />
+                                    : <Image source={{ uri: 'https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg' }} style={styles.profilePic} />}
+                            </Text>
+                            <Text style={styles.image_warning} >{this.state.imageError && this.state.imageError}</Text>
+                            <Button title="SUBMIT" color='purple' onPress={() => this.Submit()} />
+                            <Text style={styles.loginText} onPress={() => { this.onLoginClick() }}>Login</Text>
+                        </View>
                     </View>
-                </View>
+                }
             </ScrollView>
         );
     }
