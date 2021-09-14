@@ -7,6 +7,8 @@ import { Dimensions } from 'react-native';
 import Options from '../headerOptions/options';
 import { logOut } from '../../actions/actions';
 import Loader from '../Loader/loader';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import CrossIcon from 'react-native-vector-icons/Entypo';
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
@@ -38,18 +40,13 @@ const styles = StyleSheet.create({
         marginLeft: 15
     },
     headerInput: {
-        backgroundColor: "#8a8787",
         color: 'white',
-        fontSize: 13,
+        fontSize: 17,
+        padding: 0.5,
         fontWeight: 'bold',
-        width: 120,
-        height: 30,
-        textAlign: 'center',
-        paddingTop: 3,
-        paddingBottom: 2,
-        borderRadius: 30,
-        right: 70,
-        position: 'absolute',
+        marginLeft: 10,
+        width: '80%',
+        height: 50,
     },
     headerSearchIcon: {
         alignSelf: 'center',
@@ -61,8 +58,9 @@ const styles = StyleSheet.create({
         color: 'white',
         alignSelf: 'center',
         fontSize: 24,
-        right: 10,
-        position: 'absolute'
+        right: 15,
+        top: 23,
+        position: 'absolute',
     },
     scrollViewContainer: {
         height: screenHeight,
@@ -117,7 +115,8 @@ class Contacts extends Component {
             user: null,
             chooseOption: true,
             headerOptions: true,
-            showloading: false
+            showloading: false,
+            isSearch: false
         };
     }
     componentDidMount() {
@@ -181,26 +180,41 @@ class Contacts extends Component {
         this.props.logOut()
         this.props.navigation.navigate('login');
     }
-
-
-
+    searchVisible = () => {
+        this.searchValue = '';
+        this.setState({
+            searchValue: '',
+            searchData: [],
+            isSearch: this.state.isSearch ? false : true,
+        });
+    }
     render() {
         return (
             <View style={styles.dark}>
                 {this.state.showloading ? <Loader /> :
                     <>
-                        <View style={styles.header}>
-                            <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
-                            <Text style={styles.headerText}>Contacts</Text>
-                            <TextInput
-                                placeholder="Search contact..."
-                                placeholderTextColor='white'
-                                style={styles.headerInput}
-                                onChangeText={(contact) => { this.search(contact) }}
-                            />
-                            <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text>
-                            <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }}>&#8942;</Text>
-                            {this.state.headerOptions ? null : <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
+                        <View >
+                            {!this.state.isSearch ?
+                                <View style={styles.header}>
+                                    <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
+                                    <Text style={styles.headerText}>Contacts</Text>
+                                    <Text style={styles.headerSearchIcon} onPress={this.searchVisible}><Icon size={28} color="white" name="search" /></Text>
+                                    <Text style={styles.headerMenu} >&#8942;</Text>
+                                </View>
+                                : <View style={styles.header}>
+                                    <Text onPress={this.searchVisible}> <Icon size={22} color="white" name="arrow-back-ios" /></Text>
+                                    <TextInput
+                                        autoFocus
+                                        placeholder="Search Here..."
+                                        placeholderTextColor='white'
+                                        style={styles.headerInput}
+                                        value={this.state.searchValue}
+                                        onChangeText={data => { this.setState({ searchValue: data }); this.search(data); }}
+                                    />
+                                    {this.state.searchValue.length !== 0 && <Text onPress={() => { this.searchValue = '', this.setState({ searchValue: '' }) }}> <CrossIcon size={25} color="white" name="cross" /></Text>}
+                                </View>
+
+                            }
                         </View>
                         {this.state.user && this.state.user.length && <Text style={styles.NoContacts}>No Conversations Found</Text>}
                         <ScrollView style={styles.scrollViewContainer}>

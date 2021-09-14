@@ -22,6 +22,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import RFIcon from 'react-native-vector-icons/Entypo';
 import Back from 'react-native-vector-icons/MaterialIcons';
 import CheckBox from 'react-native-round-checkbox';
+import Icons from 'react-native-vector-icons/MaterialIcons';
+import OptionsPop from '../chatScreen/optionsPop';
 
 const { screenHeight, screenWidth } = Dimensions.get('window');
 class ChatRoom extends Component {
@@ -38,6 +40,7 @@ class ChatRoom extends Component {
       replyMessageIndex: -1,
       select: false,
       isStar: true,
+      showOptions: false
     };
   }
   selectedMsgs = [];
@@ -54,7 +57,7 @@ class ChatRoom extends Component {
       username: this.props.user.username,
       client2: this.props.client.username,
     });
-    this.socket.once('messages', this.onMessages);
+    this.socket.on('messages', this.onMessages);
   };
 
   componentWillUnmount() {
@@ -126,6 +129,8 @@ class ChatRoom extends Component {
   };
 
   send = (replyMessageIndex) => {
+    Keyboard.dismiss();
+    this.setState({showEmoji: false })
     if (replyMessageIndex === -1) {
       if (this.state.chatMessage) {
         this.socket.emit('chat', {
@@ -203,6 +208,8 @@ class ChatRoom extends Component {
   };
 
   handleReaction = (obj) => {
+    this.count++;
+    if(this.count===2){
     if (this.state.showEmoji === false) {
       this.setState({ reactionData: obj, showEmoji: true, tempReaction: true });
     }
@@ -210,13 +217,13 @@ class ChatRoom extends Component {
       this.setState({ showEmoji: false })
     }
   }
+  setTimeout(()=>{this.count=0},400);
+  }
   removeReaction = (obj) => {
     this.socket.emit("reaction", { username: this.props.user.username, client: this.props.client.username, messageId: obj.id })
-    this.socket.once('messages', this.onMessages);
   }
   userReaction = (reaction, obj) => {
     this.socket.emit("reaction", { username: this.props.user.username, client: this.props.client.username, messageId: obj.id, reaction: reaction })
-    this.socket.once('messages', this.onMessages);
     this.setState({ reactionData: {}, showEmoji: false, tempReaction: false });
   }
 
@@ -262,7 +269,6 @@ class ChatRoom extends Component {
         this.props.starMsgs(temp);
         for (let i = 0; i < this.selectedMsgs.length; i++) {
           this.socket.emit('delete', { username: this.props.user.username, client: this.props.client.username, messageId: this.selectedMsgs[i].id })
-          this.socket.once('messages', this.onMessages);
         } break;
       case "forward":
         this.props.navigation.navigate('forward', { message: this.selectedMsgs });
@@ -288,17 +294,27 @@ class ChatRoom extends Component {
     }
     this.setState({ messages: messages, isStar: isStar, select: !this.selectedMsgs.length ? false : true });
   }
+  showPopUp = () => {
+    this.setState({ showOptions: this.state.showOptions ? false : true })
+  }
+  showProfile = () => {
+    this.setState({ viewOptions: false })
+    this.props.navigation.navigate('clientProfile');
 
+  }
+  setPopUpCallBack = () => {
+    this.setState({ showOptions: false })
+  }
   render() {
     const { messages, select, isStar } = this.state;
     return (
       <View style={styles.chat_room}>
         {!select ?
           <View style={styles.header}>
-            <Text style={styles.back_arrow} onPress={() => { this.props.navigation.goBack() }}>&#8592;</Text>
+        <Text onPress={() => { this.props.navigation.goBack() }}> <Icons size={22} color="white" name="arrow-back-ios" /></Text>
             <Image style={styles.headerProfile} source={{ uri: this.props.user.profile }} />
             <Text style={styles.headerText}>{this.props.client.username}</Text>
-            <Text style={styles.headerMenu}>...</Text>
+          <Text style={styles.headerMenu} onPress={() => { this.showPopUp() }}>&#8942;</Text>
           </View>
           :
           <View style={styles.selectHeader}>
@@ -309,7 +325,7 @@ class ChatRoom extends Component {
             <TouchableOpacity onPress={() => this.onSelect("delete")}><Text style={styles.selectOptions}><Icon size={30} color="white" name="delete" /></Text></TouchableOpacity>
             {this.selectedMsgs.length <= 5 && <TouchableOpacity onPress={() => this.onSelect("forward")}><Text style={styles.selectOptions}><RFIcon size={30} color="white" name="forward" /></Text></TouchableOpacity>}
           </View>}
-
+        <View style={styles.popUp1}>{this.state.showOptions && <OptionsPop navcomponent="chatRoom" pinCallBack={this.pinContact} showProfile={this.showProfile} callBack={this.setPopUpCallBack} unPinCallBack={this.unPinContact} obj={this.props.client}/>}</View>
         <ScrollView contentContainerStyle={styles.scrollViewContainer}>
           {messages && !!messages.length && messages.map((message, index) => {
             return (
@@ -319,7 +335,7 @@ class ChatRoom extends Component {
                   <>
                     {message.is_delete !== 1 &&
                       <TouchableOpacity
-                        onLongPress={() => { this.setState({ select: true }), this.onChange(message, index) }} onPress={() => { select ? this.onChange(message, index) : '' }}    >
+                        onLongPress={() => { this.setState({ select: true }), this.onChange(message, index) }} onPress={() => { select ? this.onChange(message, index) :'' }}    >
                         <View style={{ position: 'absolute', marginTop: '10%' }}>
                           {select && <CheckBox
                             size={18}
@@ -362,18 +378,16 @@ class ChatRoom extends Component {
                                 {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
                               </Text>
                             </View>}
-                          {message && message.reaction && <TouchableOpacity onPress={() => { this.removeReaction(message) }} style={styles.msg_right_reaction}><Text style={{ marginLeft: "3%" }}>{message.reaction}</Text></TouchableOpacity>}
                         </View>
+                          {message && message.reaction && <TouchableOpacity  style={styles.msg_right_reaction}><Text style={{ marginLeft: "3%" }}>{message.reaction}</Text></TouchableOpacity>}
                       </TouchableOpacity>
                     }
                   </>
                 ) : (
                   <>
                     {message.is_delete !== 1 &&
-                      <TouchableOpacity onLongPress={() => { this.setState({ select: true }), this.onChange(message, index) }} onPress={() => { select ? this.onChange(message, index) : '' }}>
+                      <TouchableOpacity onLongPress={() => { this.setState({ select: true }), this.onChange(message, index) }} onPress={() => { select ? this.onChange(message, index) : this.handleReaction(message) }}>
                         <View style={styles.msg_left}>
-                          {/* <Text style={styles.message} onLongPress={() => { this.handleReaction(message) }}> */}
-                          <Text style={styles.message}  >
                             {message.hasOwnProperty('replyId') ?
                               <View>
                                 {messages.map((replyMessage, index) => {
@@ -391,7 +405,6 @@ class ChatRoom extends Component {
                                             <Text style={styles.msg_time_left}>
                                               {this.isStar(message) ? ' ⭐ ' : ' '}
                                               {this.getTimeByTimestamp(message.timestamp)}
-                                              {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
                                             </Text>
                                           </View>
                                         </View> : null}
@@ -400,12 +413,11 @@ class ChatRoom extends Component {
                                 })}
                               </View> : <View style={styles.replyMessage_left_right}>
                                 <Text style={styles.left_message}>{message.message}</Text>
-                              </View>}
                             <Text style={styles.msg_time_left}>
                               {this.isStar(message) ? ' ⭐ ' : ' '}
                               {this.getTimeByTimestamp(message.timestamp)}
                             </Text>
-                          </Text>
+                            </View>}
                         </View>
                         <View style={{ position: 'absolute', marginTop: '9%', alignSelf: 'flex-end' }}>
                           {select && <CheckBox
@@ -434,8 +446,8 @@ class ChatRoom extends Component {
             <View style={styles.cross_mark}><Text style={styles.message_color} onPress={() => { this.cancelReply() }}>X</Text></View>
           </View> : null}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.emoji_view} onPress={() => { this.onShowEmoji() }}>
-            <Text style={styles.emoji_add}>&#9787;</Text>
+          <TouchableOpacity onPress={() => { this.onShowEmoji() }}>
+        <Text style={styles.emoji_add}><Icons size={28} color="#D8D4D4" name="emoji-emotions" /></Text>
           </TouchableOpacity>
           <TextInput
             style={styles.message_input}
@@ -502,9 +514,10 @@ const styles = StyleSheet.create({
     color: 'white',
     alignSelf: 'center',
     fontSize: 24,
-    right: 10,
-    position: 'absolute'
-  },
+    right: 15,
+    top: 23,
+    position: 'absolute',
+},
   selectHeader: {
     display: "flex",
     width: screenWidth,
@@ -578,7 +591,7 @@ const styles = StyleSheet.create({
     fontSize: 12
   },
   emojiContainer: {
-    height: '50%',
+    height: '45%',
     width: '100%',
     backgroundColor: '#BFC2C6',
   },
@@ -781,6 +794,17 @@ const styles = StyleSheet.create({
   replyMessage_left_right: {
     display: 'flex',
     flexDirection: 'row'
+  },
+  popUp: {
+    display: 'flex',
+    position: 'absolute',
+  },
+  popUp1: {
+    display: 'flex',
+    position: 'absolute',
+    left: "64%",
+    width: "30%",
+    top: 23
   }
 });
 

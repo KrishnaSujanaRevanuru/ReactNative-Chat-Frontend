@@ -5,16 +5,17 @@ import io from 'socket.io-client';
 import PushNotification from "react-native-push-notification";
 import { connect } from 'react-redux';
 import { createClient } from '../../actions/actions';
-import ContactIcon from '../../../assests/chatting.png';
-import ArchiveIcon from '../../../assests/Archive.png';
 import { Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/Octicons';
+import Iconpin from 'react-native-vector-icons/Octicons';
 import Options from '../headerOptions/options'
 import { pin_conversation } from '../../actions/actions';
 import OptionPop from './optionsPop';
 import { logOut } from '../../actions/actions';
 import { NavigationActions } from 'react-navigation';
 import Loader from '../Loader/loader';
+import CrossIcon from 'react-native-vector-icons/Entypo'
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
 
@@ -53,14 +54,13 @@ const styles = StyleSheet.create({
 
   },
   headerInput: {
-    backgroundColor: "#8a8787",
     color: 'white',
-    fontSize: 13,
+    fontSize: 17,
+    padding: 0.5,
     fontWeight: 'bold',
     marginLeft: 10,
-    width: 100,
+    width: '80%',
     height: 50,
-    borderRadius: 30,
   },
   headerSearchIcon: {
     textAlign: 'right',
@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
     color: 'white',
     alignSelf: 'center',
     fontSize: 24,
-    right: 10,
-    top: 15,
+    right: 15,
+    top: 23,
     position: 'absolute',
   },
   scrollViewContainer: {
@@ -136,23 +136,21 @@ const styles = StyleSheet.create({
     paddingTop: 300
   },
   bottomContact: {
-    width: 70,
-    height: 70,
-    borderRadius: 70 / 2,
-    backgroundColor: 'white',
-    top: '85%',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#A4C3DF',
+    top: '91%',
     paddingTop: 15,
     bottom: 0,
     right: 0,
     position: 'absolute',
-    marginHorizontal: 5,
+    marginHorizontal: 10,
     marginVertical: -5
   },
   BottomProfile: {
-    width: 40,
-    height: 40,
-    left: 10,
-    alignItems: 'center',
+    right: 0,
+    position: 'absolute'
   },
   archive: {
     top: 10,
@@ -318,7 +316,6 @@ class ChatScreen extends Component {
   ToArchivedMsgs = () => {
     this.props.navigation.navigate('archive');
   }
-
   onContactClick = () => {
     this.props.navigation.navigate('contacts');
   }
@@ -451,22 +448,28 @@ class ChatScreen extends Component {
       <View style={styles.dark}>
         {this.state.showloader ? <Loader /> :
           <>
-            <View style={styles.header}>
-              <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
-              <Text style={styles.headerText}>Conversations</Text>
-              {this.state.isSearch &&
-                <TextInput
-                  placeholder="Search Here..."
-                  placeholderTextColor='white'
-                  style={styles.headerInput}
-                  value={this.state.searchValue}
-                  onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
-                />
+            <View >
+              {!this.state.isSearch ?
+                <View style={styles.header}>
+                  <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
+                  <Text style={styles.headerText}>Conversations</Text>
+                  <Text style={styles.headerSearchIcon} onPress={this.searchVisible}><Icon size={28} color="white" name="search" /></Text>
+                  <Text style={styles.headerMenu} >&#8942;</Text>
+                </View>
+                : <View style={styles.header}>
+                  <Text onPress={this.searchVisible}> <Icon size={22} color="white" name="arrow-back-ios" /></Text>
+                  <TextInput
+                    autoFocus
+                    placeholder="Search Here..."
+                    placeholderTextColor='white'
+                    style={styles.headerInput}
+                    value={this.state.searchValue}
+                    onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
+                  />
+                  {this.state.searchValue.length !== 0 && <Text onPress={() => { this.setState({ searchValue: '' }) }}> <CrossIcon size={25} color="white" name="cross" /></Text>}
+                </View>
+
               }
-              {this.state.headerOptions ?
-                <Text style={styles.headerSearchIcon} onPress={this.searchVisible}>🔍</Text> :
-                <Text style={styles.popUp1} ><Options showProfile={this.showProfile} logout={this.logout} /></Text>}
-              <Text style={styles.headerMenu} onPress={() => { this.selectOptions() }} >&#8942;</Text>
             </View>
             {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
             <ScrollView style={styles.scrollViewContainer}>
@@ -490,7 +493,7 @@ class ChatScreen extends Component {
                                 </View>
                               </TouchableOpacity>
                               <Text style={styles.messageOptions} onPress={() => this.messagePopUp(user)}>&#8942; </Text>
-                              <Text style={styles.pinIcon}>{this.isPin(user) ? <Text><Icon size={22} color="white" name="pin" /></Text> : null}</Text>
+                              <Text style={styles.pinIcon}>{this.isPin(user) ? <Text><Iconpin size={22} color="white" name="pin" /></Text> : null}</Text>
                               <View style={styles.popUp}>{user.popUp ? <OptionPop archive={this.onArcheive} pinCallBack={this.pinContact} callBack={this.setPopUpCallBack} unPinCallBack={this.unPinContact} obj={user} /> : null}</View>
                             </View>
                           </View>
@@ -507,18 +510,27 @@ class ChatScreen extends Component {
               {this.state.searchData.length !== 0 ?
                 this.state.searchData.map((user, index) => {
                   return (
-                    <View key={index} style={styles.body}>
-                      <View style={styles.containerBody}>
-                        <Image
-                          style={styles.bodyProfile}
-                          source={{
-                            uri: user.client.profile,
-                          }}
-                        />
-                      </View>
-                      <View style={styles.bodyTitle}>
-                        <Text style={styles.bodyText}>{user.client.username}</Text>
-                      </View>
+                    <View key={index}>
+                      {user.client && user.latest &&
+                        <View>
+                          <View >
+                            <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
+                              <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
+                              <View>
+                                <Text style={styles.bodyTextClient}>{user.client.username}</Text>
+                                <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                              </View>
+                              <View style={styles.timeContainer}>
+                                {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
+                                {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
+                              </View>
+                            </TouchableOpacity>
+                            <Text style={styles.messageOptions} onPress={() => this.messagePopUp(user)}>&#8942; </Text>
+                            <Text style={styles.pinIcon}>{this.isPin(user) ? <Text><Iconpin size={22} color="white" name="pin" /></Text> : null}</Text>
+                            <View style={styles.popUp}>{user.popUp ? <OptionPop archive={this.onArcheive} pinCallBack={this.pinContact} callBack={this.setPopUpCallBack} unPinCallBack={this.unPinContact} obj={user} /> : null}</View>
+                          </View>
+                        </View>
+                      }
                     </View>
                   )
                 }) :
@@ -526,9 +538,7 @@ class ChatScreen extends Component {
                   <Text style={styles.notFound}>Not Found</Text> : null}
             </ScrollView>
             <TouchableOpacity style={styles.bottomContact} onPress={() => { this.onContactClick() }}>
-              <Image
-                style={styles.BottomProfile}
-                source={ContactIcon} />
+              <Text style={styles.BottomProfile}><Icon size={50} color="black" name="add-circle" /></Text>
             </TouchableOpacity>
           </>
         }

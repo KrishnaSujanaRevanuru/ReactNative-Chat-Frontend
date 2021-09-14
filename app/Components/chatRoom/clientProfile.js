@@ -10,14 +10,16 @@ const styles = StyleSheet.create({
         height: "60%",
         marginLeft: "10%",
         borderRadius: 20
+
     },
     header: {
         display: 'flex',
         flexDirection: 'row',
+        flexDirection: 'row',
         backgroundColor: '#202124',
         paddingTop: 10
-      },
-      headerProfile: {
+    },
+    headerProfile: {
         width: 40,
         height: 40,
         display: 'flex',
@@ -25,64 +27,72 @@ const styles = StyleSheet.create({
         borderRadius: 60 / 2,
         alignSelf: 'center',
         backgroundColor: "white"
-      },
-      headerMenu: {
-       color:'white',
-       position: 'absolute',
-       right: 0,
-       fontSize:20,
-       marginTop: "6.3%",
-       marginRight: "2%",
-      },
-    
-      headerTitle: {
+    },
+    headerMenu: {
+
+        backgroundColor: "#50535a",
+        width: "40%",
+        height: 60,
+        left: "50%",
+        top: "5%",
+    },
+
+    headerTitle: {
         width: 260,
         height: 60,
         display: 'flex',
         justifyContent: 'center',
         alignSelf: 'flex-start',
         marginLeft: 20,
-      },
-      headerText: {
+    },
+    headerText: {
         color: "white",
-        top: '5%',
+        marginTop: 15,
         fontSize: 18,
         height: 50
-      },
-      userprofileimage: {
+    },
+    userprofileimage: {
         justifyContent: 'center',
         alignItems: 'center',
         width: 150,
         height: 150,
         marginLeft: "22%",
         borderRadius: 150 / 2,
-      },
-      dark: {
+    },
+    dark: {
         backgroundColor: '#202124',
         height: 800,
-      },
-      userprofiledetails: {
+    },
+    userprofiledetails: {
         color: 'white',
         marginLeft: 100,
         fontSize: 17,
         flex: 0.5,
         top: 10
-    
-      },
-     
-      image: {
+
+    },
+    headerMenuText: {
+        width: "50%",
+        height: 90,
+        display: 'flex',
+        marginLeft: "33%",
+        marginTop: "13%",
+        color: "white"
+    },
+    image: {
         height: "100%",
         marginLeft: "20%",
         flex: 0.5
-      },
-      back_arrow: {
+    },
+    back_arrow: {
         padding: 1,
         marginLeft: '2%',
         top: '4%',
-      }
+
+    }
 
 })
-class Profile extends Component {
+class ClientProfile extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -92,6 +102,7 @@ class Profile extends Component {
             viewOptions: false
         };
     }
+
     selectOptions = () => {
         if (this.state.viewOptions === false) {
             this.setState({ headerOptions: false, viewOptions: true });
@@ -103,9 +114,6 @@ class Profile extends Component {
     }
     showProfile = () => {
         this.props.navigation.navigate('profile');
-    }
-    logout = () => {
-        this.props.navigation.navigate('login');
     }
     viewProfile = () => {
         if (this.state.viewprofilestatus === false) {
@@ -119,24 +127,25 @@ class Profile extends Component {
         return (
             <View style={styles.dark} >
                 <View style={styles.header}>
-                    <Text style={styles.back_arrow} onPress={() => { this.props.navigation.goBack() }} > <Icon size={29} color="white" name="arrow-back-ios" /></Text>
+                    <Text style={styles.back_arrow} onPress={() => { this.props.navigation.goBack() }}> <Icon size={22} color="white" name="arrow-back-ios" /></Text>
                     <Text style={styles.headerText}>PROFILE</Text>
-                    <Text onPress={() => { this.selectOptions() }} style={styles.headerMenu}>&#8942;</Text>
                 </View>
-                {this.state.headerOptions ? null : <View style={styles.rightOptions}><Text onPress={() => { this.props.navigation.navigate('authenticateApp'); }}>LOG_OUT</Text></View>}
+                <View >
+                    {this.state.headerOptions ? null : <View style={styles.headerMenu}><Text style={styles.headerMenuText} onPress={() => { this.props.navigation.navigate('authenticateApp'); }}>LOG_OUT</Text></View>}
+                </View>
                 {this.state.viewProfileImage ?
                     <TouchableOpacity onPress={() => { this.viewProfile() }}>
                         <Image
                             style={{ width: "100%", height: "100%" }}
-                            source={{ uri: this.props.user.profile, }} />
-                    </TouchableOpacity>
+                            source={{ uri: this.props.user.profile, }} /></TouchableOpacity>
                     :
                     <View style={{ position: "absolute", marginTop: "40%", flex: 1 }}>
                         <View style={styles.image} >
                             <TouchableOpacity onPress={() => { this.viewProfile() }}>
                                 <Image
                                     style={styles.userprofileimage}
-                                    source={{ uri: this.props.user.profile }} /></TouchableOpacity>
+                                    source={{ uri: this.props.user.profile, }} /></TouchableOpacity>
+
                         </View>
                         <View >
                             <Text style={styles.userprofiledetails}>NAME:-  {this.props.user.username}</Text>
@@ -152,8 +161,8 @@ class Profile extends Component {
 
 const mapStateToProps = (state) => (
     {
-        user: state.user.userDetails,
+        user: state.user.client,
     }
 );
 
-export default connect(mapStateToProps, null)(Profile);
+export default connect(mapStateToProps, null)(ClientProfile);
