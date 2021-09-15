@@ -13,6 +13,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Materialicons from 'react-native-vector-icons/MaterialIcons';
 import Profile from '../Components/headerOptions/profile';
+import ClientProfile from './chatRoom/clientProfile'
 
 const TabNavigator = createBottomTabNavigator();
 const StackNav = createNativeStackNavigator();
@@ -25,11 +26,11 @@ class Tab extends Component {
             tabBarIcon: ({ color, size }) => {
               let iconName;
 
-              if (route.name === 'chatScreen') iconName = 'home';
+              if (route.name === 'chatScreen') iconName = 'chat';
               else if (route.name === 'contacts') iconName = 'contacts';
               else if (route.name === 'archive') iconName = 'archive';
-              else if (route.name === 'profile') iconName = 'person';
-              return <Materialicons name={iconName} size={size} color={color} />;
+              else if (route.name === 'profile') iconName = 'account-circle';
+              return <Materialicons name={iconName} size={27} color={color} />;
             },
             tabBarShowLabel: false,
             tabBarStyle: { backgroundColor: "#5E6F74" },
@@ -56,6 +57,7 @@ class appScreen extends Component {
           <StackNav.Screen name="chatScreen" component={Tab} options={{ header: () => null }} />
           <StackNav.Screen name="chatRoom" component={ChatRoom} options={{ header: () => null }} />
           <StackNav.Screen name="forward" component={ForwardMessage} options={{ header: () => null }} />
+          <StackNav.Screen name="clientProfile" component={ClientProfile} options={{ header: () => null }} />
         </StackNav.Navigator>
       </NavigationContainer>
     )
