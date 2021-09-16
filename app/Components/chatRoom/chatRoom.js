@@ -355,10 +355,12 @@ class ChatRoom extends Component {
                                       <View>
                                         <View style={styles.right_replyMessage_view}>
                                           <Text style={styles.right_username}>{replyMessage.username}</Text>
-                                          <Text style={styles.message}>{replyMessage.message}</Text>
+                                          <Text style={styles.message}>{replyMessage.message.trim()}</Text>
                                         </View>
                                         <View style={styles.replyMessage_left_right}>
-                                          <Text style={styles.right_message}>{message.message}</Text>
+                                          <Text style={styles.right_message}>{message.message.trim()}</Text>
+                                        </View>
+                                        <View>
                                           <Text style={styles.msg_time_right}>
                                             {this.isStar(message) ? ' ⭐ ' : ' '}
                                             {this.getTimeByTimestamp(message.timestamp)}
@@ -369,15 +371,16 @@ class ChatRoom extends Component {
                                   </View>
                                 )
                               })}
-                            </View> : <View style={styles.replyMessage_left_right}>
+                            </View> : <View><View style={styles.replyMessage_left_right}>
 
-                              <Text style={styles.right_message}>{message.message}</Text>
+                              <Text style={styles.right_message}>{message.message.trim()}</Text>
+                              </View><View>
                               <Text style={styles.msg_time_right}>
                                 {this.isStar(message) ? ' ⭐ ' : ' '}
                                 {this.getTimeByTimestamp(message.timestamp)}
                                 {message.readStatus ? <Image source={readIcon} /> : <Image source={deliveredIcon} />}
                               </Text>
-                            </View>}
+                            </View></View>}
                         </View>
                           {message && message.reaction && <TouchableOpacity  style={styles.msg_right_reaction}><Text style={{ marginLeft: "3%" }}>{message.reaction}</Text></TouchableOpacity>}
                       </TouchableOpacity>
@@ -398,10 +401,12 @@ class ChatRoom extends Component {
                                         <View>
                                           <View style={styles.left_replyMessage_view}>
                                             <Text style={styles.left_username}>{replyMessage.username}</Text>
-                                            <Text style={styles.left_message}>{replyMessage.message}</Text>
+                                            <Text style={styles.left_message}>{replyMessage.message.trim()}</Text>
                                           </View>
                                           <View style={styles.replyMessage_left_right}>
-                                            <Text style={styles.left_message}>{message.message}</Text>
+                                            <Text style={styles.left_message}>{message.message.trim()}</Text>
+                                          </View>
+                                          <View>
                                             <Text style={styles.msg_time_left}>
                                               {this.isStar(message) ? ' ⭐ ' : ' '}
                                               {this.getTimeByTimestamp(message.timestamp)}
@@ -411,13 +416,14 @@ class ChatRoom extends Component {
                                     </View>
                                   )
                                 })}
-                              </View> : <View style={styles.replyMessage_left_right}>
-                                <Text style={styles.left_message}>{message.message}</Text>
+                              </View> : <View><View style={styles.replyMessage_left_right}>
+                                <Text style={styles.left_message}>{message.message.trim()}</Text>
+                                </View><View>
                             <Text style={styles.msg_time_left}>
                               {this.isStar(message) ? ' ⭐ ' : ' '}
                               {this.getTimeByTimestamp(message.timestamp)}
                             </Text>
-                            </View>}
+                            </View></View>}
                         </View>
                         <View style={{ position: 'absolute', marginTop: '9%', alignSelf: 'flex-end' }}>
                           {select && <CheckBox
@@ -441,7 +447,9 @@ class ChatRoom extends Component {
         {this.replyMessage ?
           <View style={styles.firstMessage_view}>
             <View style={styles.firstMessage}>
-              <Text style={styles.message_color}>{this.firstMessage}</Text>
+              <ScrollView style={styles.scroll_view}>
+                <Text style={styles.message_color}>{this.firstMessage}</Text>
+              </ScrollView>
             </View>
             <View style={styles.cross_mark}><Text style={styles.message_color} onPress={() => { this.cancelReply() }}>X</Text></View>
           </View> : null}
@@ -453,10 +461,11 @@ class ChatRoom extends Component {
             style={styles.message_input}
             placeholder="Type a Message"
             placeholderTextColor="white"
+            multiline={true}
             value={this.state.chatMessage}
             onChangeText={(msg) => { this.handleText(msg) }}
             onFocus={() => { this.setState({ showEmoji: false }) }}
-            onSubmitEditing={() => this.send(this.state.replyMessageIndex)}
+            // onSubmitEditing={() => this.send(this.state.replyMessageIndex)}
           />
           <TouchableOpacity onPress={() => this.send(this.state.replyMessageIndex)} style={styles.send_btn}>
             <Image style={styles.message_send} source={SendButton} />
@@ -553,6 +562,7 @@ const styles = StyleSheet.create({
     marginBottom: '5%',
   },
   msg_right: {
+    maxWidth:'80%',
     color: 'white',
     display: 'flex',
     flexDirection: 'row',
@@ -579,15 +589,12 @@ const styles = StyleSheet.create({
   msg_time_right: {
     color: 'white',
     alignSelf: 'flex-end',
-    marginLeft: '3%',
-    marginTop: '2%',
     fontSize: 12
   },
   msg_time_left: {
     color: 'white',
-    alignSelf: 'flex-start',
-    marginLeft: '3%',
-    marginTop: '2%',
+    paddingTop:15,
+    alignSelf: 'flex-end',
     fontSize: 12
   },
   emojiContainer: {
@@ -596,6 +603,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#BFC2C6',
   },
   msg_left: {
+    maxWidth:'80%',
     color: '#ffffff',
     alignSelf: 'flex-start',
     backgroundColor: '#1a1a1a',
@@ -737,6 +745,9 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 10,
   },
+  scroll_view:{
+    height:30
+  },
   cross_mark: {
     width: '15%',
     left: '15%',
@@ -778,7 +789,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginRight: 5,
     marginTop: 5,
-    width: screenWidth,
+    // width: screenWidth,
     justifyContent: 'flex-end',
   },
   right_message: {
@@ -788,12 +799,13 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginRight: 5,
     marginTop: 5,
-    width: screenWidth,
+    // width: screenWidth,
     justifyContent: 'flex-start',
   },
   replyMessage_left_right: {
     display: 'flex',
-    flexDirection: 'row'
+    flexDirection: 'row',
+    maxWidth:'100%',
   },
   popUp: {
     display: 'flex',
