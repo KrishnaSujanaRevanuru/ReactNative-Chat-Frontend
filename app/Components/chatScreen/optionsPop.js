@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { pin_conversation } from '../../actions/actions';
 import { connect } from 'react-redux';
 import { View, Text, StyleSheet, } from 'react-native';
 const styles = StyleSheet.create({
@@ -39,50 +40,41 @@ class OptionPop extends Component {
     this.props.showProfile()
   }
   isPin = () => {
-    let obj = this.props.obj;
-    let pin_data = this.props.pin_data;
+    let { obj, pin_data } = this.props;
     let found = -1
     for (let i = 0; i < pin_data.length; i++) {
-      if (pin_data[i].id === obj.id)
+      if (pin_data[i] === obj)
         found = i;
     }
     if (found === -1) return false;
     else return true;
   }
   setPin = (type) => {
-    let obj = this.props.obj;
+    let { obj, pin_data } = this.props;
     switch (type) {
-      case "pin": this.props.pinCallBack(obj);
-        this.props.callBack();
+      case "pin":
+        if (pin_data.length < 3)
+          pin_data.push(obj)
         break;
       case "unpin":
-        this.props.unPinCallBack(obj)
-        this.props.callBack();
+        for (let i = 0; i < pin_data.length; i++) {
+            if(pin_data[i] === obj)
+              pin_data.splice(i,1);
+        }
         break;
       default: break;
     }
+    this.props.pin_conversation(pin_data);
+    this.props.callBack();
   }
 
   render() {
-    let obj = this.props.obj
-    if (this.props.navcomponent === "chatRoom") {
-      return (
-        <View style={styles.rightOptions}>
-          <Text style={styles.optionsMsgText} onPress={() => { this.setBack() }} >Profile</Text>
-          <Text style={styles.optionsMsgText}>Pin Contact</Text>
-
-        </View>
-      )
-
-    }
-    else {
-      return (
-        <View style={styles.rightOptionsMenu}>
-          <Text onPress={() => { this.props.archive(obj.id) }} style={styles.optionsMsgTextMenu} >Archive</Text>
-          <Text style={styles.optionsMsgTextMenu} onPress={() => { this.setPin(this.isPin() ? "unpin" : "pin") }} >{this.isPin() ? "Unpin" : "Pin"}</Text>
-        </View>
-      )
-    }
+    return (
+      <View style={styles.rightOptions}>
+        <Text style={styles.optionsMsgText} onPress={() => { this.setBack() }} >Profile</Text>
+        <Text style={styles.optionsMsgText} onPress={() => { this.setPin(this.isPin() ? "unpin" : "pin") }}  >{this.isPin() ? "Unpin" : "Pin"}</Text>
+      </View>
+    )
   }
 
 }
@@ -92,7 +84,9 @@ const mapStateToProps = (state) => (
   }
 );
 
+const mapDispatchToProps = (dispatch) => ({
+  pin_conversation: (data) => dispatch(pin_conversation(data)),
+});
 
 
-
-export default connect(mapStateToProps, null)(OptionPop);
+export default connect(mapStateToProps, mapDispatchToProps)(OptionPop);

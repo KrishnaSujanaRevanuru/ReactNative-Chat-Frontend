@@ -2,7 +2,7 @@ import { CREATE_CLIENT, FETCH_USER, PIN_CONVERSATION } from "../actions/actions"
 import { USER_LOGIN } from "../actions/actions";
 import { SUBMIT_REGISTER } from "../actions/actions";
 import { LOG_OUT } from "../actions/actions";
-import { STAR_MSGS } from "../actions/actions"
+import { STAR_MSGS,FETCHSUCCESS } from "../actions/actions"
 
 const initialState = {
     userDetails: {
@@ -15,6 +15,7 @@ const initialState = {
     client: null,
     pin_data: [],
     starMsgs: [],
+    contacts:[]
 }
 
 const userReducer = (state = initialState, action) => {
@@ -37,6 +38,8 @@ const userReducer = (state = initialState, action) => {
             return Object.assign({}, state, { pin_data: action.data });
         case STAR_MSGS:
             return Object.assign({}, state, { starMsgs: action.data });
+        case FETCHSUCCESS:
+            return Object.assign({}, state, {contacts: action.payload });
         default: return state
     }
 

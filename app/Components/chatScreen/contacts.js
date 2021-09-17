@@ -4,7 +4,6 @@ import axios from "axios";
 import { connect } from "react-redux";
 import { createClient } from '../../actions/actions';
 import { Dimensions } from 'react-native';
-import Options from '../headerOptions/options';
 import { logOut } from '../../actions/actions';
 import Loader from '../Loader/loader';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -50,7 +49,7 @@ const styles = StyleSheet.create({
     },
     headerSearchIcon: {
         alignSelf: 'center',
-        right: 40,
+        right: 20,
         position: 'absolute'
     },
     headerMenu: {
@@ -150,7 +149,7 @@ class Contacts extends Component {
 
     onContactClick = (user) => {
         this.props.createClient(user);
-        this.props.navigation.navigate('chatRoom');
+        this.props.navigation.navigate('chatRoom',{user:user.username});
     }
     filter = []
     searchValue = ''
@@ -199,7 +198,6 @@ class Contacts extends Component {
                                     <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
                                     <Text style={styles.headerText}>Contacts</Text>
                                     <Text style={styles.headerSearchIcon} onPress={this.searchVisible}><Icon size={28} color="white" name="search" /></Text>
-                                    <Text style={styles.headerMenu} >&#8942;</Text>
                                 </View>
                                 : <View style={styles.header}>
                                     <Text onPress={this.searchVisible}> <Icon size={22} color="white" name="arrow-back-ios" /></Text>
