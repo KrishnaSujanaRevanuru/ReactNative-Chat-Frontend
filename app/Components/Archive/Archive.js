@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
         textAlign: 'right',
         alignSelf: 'center',
         fontSize: 20,
-        right: 40,
+        right: 20,
         position: 'absolute'
     },
     headerMenu: {
@@ -299,7 +299,6 @@ class Archive extends Component {
                                 <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
                                 <Text style={styles.headerText}>Archive</Text>
                                 <Text style={styles.headerSearchIcon} onPress={this.searchVisible}><Icon size={28} color="white" name="search" /></Text>
-                                <Text style={styles.headerMenu} >&#8942;</Text>
                             </View>
                             : <View style={styles.header}>
                                 <Text onPress={this.searchVisible}> <Icon size={22} color="white" name="arrow-back-ios" /></Text>

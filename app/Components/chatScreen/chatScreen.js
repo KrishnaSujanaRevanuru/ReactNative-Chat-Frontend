@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import axios from 'axios';
 import io from 'socket.io-client';
 import PushNotification from "react-native-push-notification";
@@ -7,14 +7,13 @@ import { connect } from 'react-redux';
 import { createClient } from '../../actions/actions';
 import { Dimensions } from 'react-native';
 import Iconpin from 'react-native-vector-icons/Octicons';
-import Options from '../headerOptions/options'
-import { pin_conversation } from '../../actions/actions';
-import OptionPop from './optionsPop';
+import { pin_conversation, fetchContacts } from '../../actions/actions';
 import { logOut } from '../../actions/actions';
-import { NavigationActions } from 'react-navigation';
 import Loader from '../Loader/loader';
 import CrossIcon from 'react-native-vector-icons/Entypo'
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import PinIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import CheckBox from 'react-native-round-checkbox';
 
 const { screenHeight, screenWidth } = Dimensions.get('window');
 
@@ -33,6 +32,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#373a3f",
     paddingHorizontal: 10,
     paddingVertical: 15
+  },
+  selectHeader: {
+    display: "flex",
+    width: screenWidth,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexDirection: "row",
+    backgroundColor: "#373a3f",
+    paddingHorizontal: 10,
+    paddingVertical: 24.5
   },
   headerProfile: {
     width: 50,
@@ -66,7 +75,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     alignSelf: 'center',
     fontSize: 20,
-    right: 40,
+    right: 20,
     position: 'absolute'
   },
   headerMenu: {
@@ -124,7 +133,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   timeContainer: {
-    right: 60,
+    right: 25,
     position: 'absolute'
   },
   time: {
@@ -189,9 +198,8 @@ const styles = StyleSheet.create({
   pinIcon: {
     position: 'absolute',
     alignSelf: 'center',
-    top: 30,
-    right: 20,
-
+    top: 7,
+    right: 15,
   },
   popUp: {
     position: 'absolute',
@@ -209,6 +217,23 @@ const styles = StyleSheet.create({
     right: 20,
     position: 'absolute'
   },
+  selecToBack: {
+    marginRight: '2%',
+  },
+  CheckBox: { position: 'absolute', padding: 45, top: '1%' },
+  conversationData: { display: 'flex', flexDirection: 'column', width: '65%', },
+  pinPopUp: {
+    color: 'black',
+    position: 'absolute',
+    display: 'flex',
+    backgroundColor: '#B9C2C5',
+    bottom: 10,
+    alignSelf: 'center',
+    alignItems: 'center',
+    height: "5%",
+    padding: 5,
+    borderRadius: 15
+  }
 });
 
 class ChatScreen extends Component {
@@ -223,14 +248,27 @@ class ChatScreen extends Component {
       chooseOption: false,
       headerOptions: true,
       pin: false,
-      showloader: false
+      showloader: false,
+      select: false,
+      isPin: true,
+      noitificationClient: "",
+      notifyClientData: null,
+      filterData: "",
     };
   }
   socket = null;
   componentDidMount() {
-    this.setState({ showloader: true })
+    this.getContacts();
+    let that = this
+    PushNotification.configure({
+      onNotification: function (notification) {
+        that.handleNotification(notification);
+      },
+      requestPermissions: Platform.OS === 'ios'
+    });
+    this.setState({ showloader: true });
     this.getConversations();
-    this.focusListener = this.props.navigation.addListener("focus", () => this.getConversations());
+    this.props.navigation.addListener("focus", () => this.getConversations(), this.props.fetchContacts(this.props.user.token));
     this.socket = io('https://ptchatindia.herokuapp.com/', {
       transports: ['websocket'],
     });
@@ -238,13 +276,45 @@ class ChatScreen extends Component {
     this.socket.on("notification", this.onNotification);
   }
 
+  handleNotification = (notification) => {
+    let clientName = this.state.noitificationClient;
+    const newArray = this.state.notifyClientData.filter((value) => {
+      return value.username.includes(clientName);
+    });
+    this.props.createClient(...newArray);
+    this.props.navigation.navigate('chatRoom', { user: newArray[0].username });
+  }
+  getContacts = () => {
+    axios
+      .request({
+        method: "POST",
+        url: `https://ptchatindia.herokuapp.com/contacts`,
+        headers: {
+          authorization: this.props.user.token,
+        },
+      })
+      .then((res) => {
+        details = [];
+        res.data.map((user, index) => {
+          if (user.username === this.props.user.username) {
+            this.setState({ user: user });
+            index = index;
+          } else {
+            details.push(user);
+          }
+        });
+        this.setState({ notifyClientData: details, showloading: false });
+      });
+  };
+
   onNotification = (data) => {
     PushNotification.localNotification({
       channelId: "test-channel",
       title: data.username + "  send a message",
       message: "Message:" + data.message,
       color: "blue", // (optional) default: none
-    })
+    });
+    this.setState({ noitificationClient: data.username });
   }
 
   getConversations = () => {
@@ -272,7 +342,7 @@ class ChatScreen extends Component {
                 if (pin_data.length === 0) details.push(user);
                 else {
                   for (let i = 0; i < pin_data.length; i++) {
-                    if (user.id === pin_data[i].id)
+                    if (user.client.username === pin_data[i])
                       found = 1
                   }
                   if (found === 0) {
@@ -296,32 +366,12 @@ class ChatScreen extends Component {
       })
   };
 
-  onArcheive = (id) => {
-    axios
-      .request({
-        method: "POST",
-        url: 'https://ptchatindia.herokuapp.com/archive',
-        headers: {
-          authorization: this.props.user.token
-        },
-        data: {
-          username: this.props.user.username,
-          roomIds: [id]
-        }
-      }).then((res) => {
-        this.setState({}, () => this.getConversations());
-      }).catch((error) => console.log(error))
-  }
-
-  ToArchivedMsgs = () => {
-    this.props.navigation.navigate('archive');
-  }
   onContactClick = () => {
     this.props.navigation.navigate('contacts');
   }
   getTimeByTimestamp = (timestamp) => {
     let date = new Date(timestamp * 1000);
-    let ampm = date.getHours() >= 12 ? 'pm' : 'am';
+    let ampm = date.getHours() >= 12 ? 'PM' : 'AM';
     let hours = date.getHours() >= 12 ? date.getHours() - 12 : date.getHours();
     return hours + ":" + date.getMinutes() + ampm;
   }
@@ -348,7 +398,7 @@ class ChatScreen extends Component {
     let conversationData = this.state.Data;
     if (conversationData && data.length > 0) {
       searchData = conversationData.filter((result) => {
-        return result.client.username.toLowerCase().includes(data.toLowerCase())
+        return (result.client && result.client.username.toLowerCase().includes(data.toLowerCase()));
       })
     }
     this.setState({ searchData: searchData });
@@ -363,8 +413,9 @@ class ChatScreen extends Component {
   }
 
   onConversationClick = (user) => {
-    this.props.createClient(user);
-    this.props.navigation.navigate('chatRoom');
+    this.setState({ isSearch: false,select:false,searchData:[],searchValue:'' })
+    this.props.createClient(user.client);
+    this.props.navigation.navigate('chatRoom', { user: user.client.username });
   }
   selectOptions = () => {
     if (this.state.headerOptions === true) {
@@ -374,16 +425,7 @@ class ChatScreen extends Component {
       this.setState({ headerOptions: true, });
     }
   }
-  messagePopUp = (user) => {
-    let data = this.state.Data
-    for (let i = 0; i < data.length; i++) {
-      if (data[i].id !== user.id)
-        data[i].popUp = false
-      else data[i].popUp = data[i].popUp ? false : true;
-    }
-    this.setState({ Data: data });
 
-  }
   showProfile = () => {
     this.setState({ viewOptions: false })
     this.props.navigation.navigate('profile');
@@ -392,55 +434,91 @@ class ChatScreen extends Component {
     this.props.logOut()
     this.props.navigation.navigate('authenticateApp');
   }
-  pinContact = (obj) => {
-    let pin_data = this.props.pin_data;
-    let contacts = this.state.Data
-    if (pin_data.length < 3) {
-      pin_data.push(obj)
-      let temp = [], index = 0;
-      for (let i = 0; i < contacts.length; i++) {
-        if (contacts[i].id === obj.id)
-          temp = contacts.splice(i, 1);
-      }
-      contacts.unshift(temp[0])
-      this.props.pin_conversation(pin_data);
-      this.setState({ Data: contacts, chooseOption: true, });
-    }
-    else {
-      this.setState({ Data: contacts, chooseOption: true, pin: true });
-    }
-  }
-  unPinContact = (obj) => {
-    let pin_data = this.props.pin_data;
-    let contacts = this.state.Data;
-    for (let i = 0; i < contacts.length; i++) {
-      if (contacts[i].id === obj.id)
-        contacts.splice(i, 1);
-    }
-    for (let i = 0; i < pin_data.length; i++) {
-      if (pin_data[i].id === obj.id)
-        pin_data.splice(i, 1);
-    }
-    contacts.push(obj);
-    this.props.pin_conversation(pin_data);
-    this.setState({ Data: contacts, chooseOption: true });
-  }
+
   isPin = (obj) => {
     let pin_data = this.props.pin_data;
     let found = -1
     for (let i = 0; i < pin_data.length; i++) {
-      if (pin_data[i].id === obj.id)
+      if (pin_data[i] === obj)
         found = 1;
     }
     if (found === -1) return false;
     else return true;
   }
-  setPopUpCallBack = () => {
-    let data = this.state.Data
-    for (let i = 0; i < data.length; i++) {
-      data[i].popUp = false;
+  onSelect = (type) => {
+    let pin_data = this.props.pin_data;
+    let Data = this.state.Data;
+    switch (type) {
+      case 'pin':
+        if (pin_data.length < 3) {
+          pin_data.push(this.selectedConversation[0].client.username)
+          let temp = [];
+          for (let i = 0; i < Data.length; i++) {
+            if (Data[i].client.username === this.selectedConversation[0].client.username)
+              temp = Data.splice(i, 1);
+          }
+          Data.unshift(temp[0])
+        }
+        else {
+          this.setState({ pin: true });
+        }
+        break;
+      case 'unpin':
+        for (let i = 0; i < Data.length; i++) {
+          if (Data[i].client.username === this.selectedConversation[0].client.username)
+            Data.splice(i, 1);
+        }
+        for (let i = 0; i < pin_data.length; i++) {
+          if (pin_data[i] === this.selectedConversation[0].client.username)
+            pin_data.splice(i, 1);
+        }
+        Data.push(this.selectedConversation[0]);
+        break;
+      case 'archive':
+        for (let i = 0; i < this.selectedConversation.length; i++) {
+          axios.request({
+            method: "POST",
+            url: 'https://ptchatindia.herokuapp.com/archive',
+            headers: {
+              authorization: this.props.user.token
+            },
+            data: {
+              username: this.props.user.username,
+              roomIds: [this.selectedConversation[i].id]
+            }
+          }).then((res) => {
+            this.setState({}, () => this.getConversations());
+          }).catch((error) => console.log(error))
+        }
+        break;
+      default: break;
     }
-    this.setState({ Data: data });
+    this.props.pin_conversation(pin_data);
+    this.selectedConversation = [];
+    Data = Data.map(obj => ({ ...obj, popUp: false }));
+    this.setState({ select: false, Data: Data, isPin: true });
+  }
+  selectedConversation = [];
+  onChange = (userObj, index) => {
+    let { Data, isPin } = this.state;
+    let pin_data = this.props.pin_data;
+    Data[index].popUp = !Data[index].popUp;
+    if (Data[index].popUp) this.selectedConversation.push(userObj);
+    else {
+      for (let i = 0; i < this.selectedConversation.length; i++)
+        if (this.selectedConversation[i].id === userObj.id) this.selectedConversation.splice(i, 1);
+    }
+    for (let i = 0; i < pin_data.length; i++) {
+      if (userObj.client.username === pin_data[i]) isPin = false;
+    }
+    this.setState({ Data: Data, isPin: isPin, select: !this.selectedConversation.length ? false : true });
+  }
+
+  pinAlert = () => {
+    setTimeout(() => { this.setState({ pin: false }) }, 1500);
+    return (<Text style={styles.pinPopUp}>You can pin upto 3 chats</Text>)
+
+
   }
 
   render() {
@@ -448,29 +526,35 @@ class ChatScreen extends Component {
       <View style={styles.dark}>
         {this.state.showloader ? <Loader /> :
           <>
-            <View >
-              {!this.state.isSearch ?
-                <View style={styles.header}>
-                  <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
-                  <Text style={styles.headerText}>Conversations</Text>
-                  <Text style={styles.headerSearchIcon} onPress={this.searchVisible}><Icon size={28} color="white" name="search" /></Text>
-                  <Text style={styles.headerMenu} >&#8942;</Text>
-                </View>
-                : <View style={styles.header}>
-                  <Text onPress={this.searchVisible}> <Icon size={22} color="white" name="arrow-back-ios" /></Text>
-                  <TextInput
-                    autoFocus
-                    placeholder="Search Here..."
-                    placeholderTextColor='white'
-                    style={styles.headerInput}
-                    value={this.state.searchValue}
-                    onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
-                  />
-                  {this.state.searchValue.length !== 0 && <Text onPress={() => { this.setState({ searchValue: '' }) }}> <CrossIcon size={25} color="white" name="cross" /></Text>}
-                </View>
-
-              }
-            </View>
+            {!this.state.select ?
+              <View >
+                {!this.state.isSearch ?
+                  <View style={styles.header}>
+                    <Image style={styles.headerProfile} source={{ uri: this.props.user.profile, }} />
+                    <Text style={styles.headerText}>Conversations</Text>
+                    <Text style={styles.headerSearchIcon} onPress={this.searchVisible}><Icon size={28} color="white" name="search" /></Text>
+                  </View>
+                  : <View style={styles.header}>
+                    <Text onPress={this.searchVisible}> <Icon size={30} color="white" name="arrow-back-ios" /></Text>
+                    <TextInput
+                      autoFocus
+                      placeholder="Search Here..."
+                      placeholderTextColor='white'
+                      style={styles.headerInput}
+                      value={this.state.searchValue}
+                      onChangeText={data => { this.setState({ searchValue: data }); this.searchConversations(data); }}
+                    />
+                    {this.state.searchValue.length !== 0 && <Text onPress={() => { this.setState({ searchValue: '' }) }}> <CrossIcon size={25} color="white" name="cross" /></Text>}
+                  </View>}
+              </View>
+              :
+              <View style={styles.selectHeader}>
+                <TouchableOpacity onPress={() => this.onSelect("cancel")}><Text style={styles.selecToBack}><Icon size={30} color="white" name="arrow-back-ios" /></Text></TouchableOpacity>
+                {this.selectedConversation.length <= 1 ?
+                  this.state.isPin ? <TouchableOpacity onPress={() => this.onSelect("pin")}><Text style={styles.selecToBack}><PinIcon size={30} color="white" name="pin" /></Text></TouchableOpacity> :
+                    <TouchableOpacity onPress={() => this.onSelect("unpin")}><Text style={styles.selecToBack}><PinIcon size={30} color="white" name="pin-off" /></Text></TouchableOpacity> : null}
+                <TouchableOpacity onPress={() => this.onSelect("archive")}><Text style={styles.selecToBack}><Icon size={30} color="white" name="archive" /></Text></TouchableOpacity>
+              </View>}
             {this.state.isEmpty && <Text style={styles.NoConversation}>No Conversations Found</Text>}
             <ScrollView style={styles.scrollViewContainer}>
               {this.state.searchValue.length === 0 ?
@@ -481,30 +565,35 @@ class ChatScreen extends Component {
                         {user.client && user.latest &&
                           <View>
                             <View >
-                              <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
+                              <TouchableOpacity style={styles.body} onPress={() => { this.state.select ? this.onChange(user, index) : this.onConversationClick(user) }}
+                                onLongPress={() => { this.setState({ select: true }); this.onChange(user, index) }}>
                                 <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
-                                <View>
+                                <View style={styles.CheckBox}>
+                                  {this.state.select &&
+                                    <CheckBox
+                                      size={18}
+                                      borderColor={'white'}
+                                      backgroundColor={'#06C0F9'}
+                                      iconCOlor={'white'} checked={user.popUp}
+                                      onValueChange={() => this.onChange(user, index)}
+                                    />}
+                                </View>
+                                <View style={styles.conversationData}>
                                   <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                  <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                                  <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'} >{user.latest.message}</Text>
                                 </View>
                                 <View style={styles.timeContainer}>
                                   {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
                                   {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
                                 </View>
                               </TouchableOpacity>
-                              <Text style={styles.messageOptions} onPress={() => this.messagePopUp(user)}>&#8942; </Text>
-                              <Text style={styles.pinIcon}>{this.isPin(user) ? <Text><Iconpin size={22} color="white" name="pin" /></Text> : null}</Text>
-                              <View style={styles.popUp}>{user.popUp ? <OptionPop archive={this.onArcheive} pinCallBack={this.pinContact} callBack={this.setPopUpCallBack} unPinCallBack={this.unPinContact} obj={user} /> : null}</View>
+                              <Text style={styles.pinIcon}>{this.isPin(user.client.username) ? <Text><Iconpin size={18} color="white" name="pin" /></Text> : null}</Text>
                             </View>
                           </View>
                         }
                       </View>
                     );
                   })}
-                  {this.state.pin ? <View>
-                    <Text style={{ color: "white" }}>we can't pin more than 3 conversations</Text>
-                    <Text style={{ color: "white" }} onPress={() => { this.setState({ pin: false }) }}>X</Text>
-                  </View> : null}
                 </View>
                 : null}
               {this.state.searchData.length !== 0 ?
@@ -513,21 +602,19 @@ class ChatScreen extends Component {
                     <View key={index}>
                       {user.client && user.latest &&
                         <View>
-                          <View >
-                            <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user.client) }}>
+                          <View>
+                            <TouchableOpacity style={styles.body} onPress={() => { this.onConversationClick(user) }}>
                               <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
-                              <View>
+                              <View style={styles.conversationData}>
                                 <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                                <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'}>{user.latest.message}</Text>
                               </View>
                               <View style={styles.timeContainer}>
                                 {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
                                 {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
                               </View>
                             </TouchableOpacity>
-                            <Text style={styles.messageOptions} onPress={() => this.messagePopUp(user)}>&#8942; </Text>
-                            <Text style={styles.pinIcon}>{this.isPin(user) ? <Text><Iconpin size={22} color="white" name="pin" /></Text> : null}</Text>
-                            <View style={styles.popUp}>{user.popUp ? <OptionPop archive={this.onArcheive} pinCallBack={this.pinContact} callBack={this.setPopUpCallBack} unPinCallBack={this.unPinContact} obj={user} /> : null}</View>
+                            <Text style={styles.pinIcon}>{this.isPin(user.client.username) ? <Text><Iconpin size={18} color="white" name="pin" /></Text> : null}</Text>
                           </View>
                         </View>
                       }
@@ -542,6 +629,7 @@ class ChatScreen extends Component {
             </TouchableOpacity>
           </>
         }
+        {this.state.pin ? this.pinAlert() : null}
       </View>
     );
   }
@@ -561,6 +649,7 @@ const mapDispatchToProps = (dispatch) => ({
   createClient: (data) => dispatch(createClient(data)),
   pin_conversation: (data) => dispatch(pin_conversation(data)),
   logOut: () => dispatch(logOut()),
+  fetchContacts: (data) => dispatch(fetchContacts(data)),
 
 });
 

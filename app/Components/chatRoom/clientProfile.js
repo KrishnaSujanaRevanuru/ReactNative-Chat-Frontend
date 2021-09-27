@@ -99,10 +99,22 @@ class ClientProfile extends Component {
             headerOptions: true,
             viewProfileImage: false,
             viewprofilestatus: false,
-            viewOptions: false
+            viewOptions: false,
+            clientProfile: {},
         };
     }
-
+    componentDidMount=()=>{
+        this.getClientData();
+    }
+    getClientData=()=>{ 
+        let {user,contacts}=this.props;
+        let obj={}
+        for(let i=0;i<contacts.length; i++){
+            if(user.username === contacts[i].username)
+            obj=contacts[i];
+        }
+        this.setState({clientProfile:obj});
+    }
     selectOptions = () => {
         if (this.state.viewOptions === false) {
             this.setState({ headerOptions: false, viewOptions: true });
@@ -137,20 +149,20 @@ class ClientProfile extends Component {
                     <TouchableOpacity onPress={() => { this.viewProfile() }}>
                         <Image
                             style={{ width: "100%", height: "100%" }}
-                            source={{ uri: this.props.user.profile, }} /></TouchableOpacity>
+                            source={{ uri: this.state.clientProfile.profile, }} /></TouchableOpacity>
                     :
                     <View style={{ position: "absolute", marginTop: "40%", flex: 1 }}>
                         <View style={styles.image} >
                             <TouchableOpacity onPress={() => { this.viewProfile() }}>
                                 <Image
                                     style={styles.userprofileimage}
-                                    source={{ uri: this.props.user.profile, }} /></TouchableOpacity>
+                                    source={{ uri: this.state.clientProfile.profile, }} /></TouchableOpacity>
 
                         </View>
                         <View >
-                            <Text style={styles.userprofiledetails}>NAME:-  {this.props.user.username}</Text>
-                            <Text style={styles.userprofiledetails}>EMAIL:-  {this.props.user.email}</Text>
-                            <Text style={styles.userprofiledetails}>MOBILE:- (+91) {this.props.user.mobile}</Text>
+                            <Text style={styles.userprofiledetails}>NAME:-  {this.state.clientProfile.username}</Text>
+                            <Text style={styles.userprofiledetails}>EMAIL:-  {this.state.clientProfile.email}</Text>
+                            <Text style={styles.userprofiledetails}>MOBILE:- (+91) {this.state.clientProfile.mobile}</Text>
                         </View>
                     </View>
                 }
@@ -162,6 +174,7 @@ class ClientProfile extends Component {
 const mapStateToProps = (state) => (
     {
         user: state.user.client,
+        contacts:state.user.contacts
     }
 );
 

@@ -24,67 +24,81 @@ class Registration extends React.Component {
     }
     password = ''
     error = { username: '', email: '', number: '', password: '', cpassword: '' }
-    Validate = (Field, Value) => {
-        if (Field === "Username") {
-            this.setState({ username: Value })
-            if (Value.length < 4) {
-                this.error.username = true;
-            }
-            else {
-                this.error.username = false;
-            }
+
+    setDetails = (Field, Value) => {
+        switch (Field) {
+            case 'Username':
+                this.setState({ username: Value, RegisterError: '' })
+                break;
+            case 'Email':
+                this.setState({ email: Value, RegisterError: '' })
+                break;
+            case 'Number':
+                this.setState({ number: Value, RegisterError: '' })
+                break;
+            case 'Password':
+                this.setState({ password: Value, RegisterError: '' })
+                break;
+            case 'Confirm Password':
+                this.setState({ confirm_password: Value, RegisterError: '' })
+                break;
+            default:
+                break;
         }
-        if (Field === "Email") {
-            this.setState({ email: Value })
-            if (!Value.match('^[a-zA-Z0-9]+@+[a-zA-Z0-9]+.+[A-z]')) {
-                this.error.email = true;
-            }
-            else {
-                this.error.email = false;
-            }
-        }
-        if (Field === "Number") {
-            this.setState({ number: Value })
-            if (Value.length !== 10) {
-                this.error.number = true;
-            }
-            else {
-                this.error.number = false;
-            }
-        }
-        if (Field === "Password") {
-            this.setState({ password: Value })
-            if (!Value.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})')) {
-                this.error.password = true;
-            }
-            else {
-                this.password = Value;
-                this.error.password = false;
-            }
-        }
-        if (Field === "Confirm Password") {
-            this.setState({ confirm_password: Value })
-            if (this.password !== Value) {
-                this.error.cpassword = true;
-            }
-            else {
-                this.confirm_password = Value;
-                this.error.cpassword = false;
-            }
+    }
+
+    Validate = (Field) => {
+        const { username, email, number, password, confirm_password } = this.state;
+        switch (Field) {
+            case 'Username':
+                if (username.length < 4) {
+                    this.error.username = true;
+                }
+                else {
+                    this.error.username = false;
+                }
+                break;
+            case 'Email':
+                if (!email.match('^[a-zA-Z0-9]+@+[a-zA-Z0-9]+.+[A-z]')) {
+                    this.error.email = true;
+                }
+                else {
+                    this.error.email = false;
+                }
+                break;
+            case 'Number':
+                if (number.length !== 10) {
+                    this.error.number = true;
+                }
+                else {
+                    this.error.number = false;
+                }
+                break;
+            case 'Password':
+                if (!password.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})')) {
+                    this.error.password = true;
+                }
+                else {
+                    this.password = password;
+                    this.error.password = false;
+                }
+                break;
+            case 'Confirm Password':
+                if (confirm_password !== this.password) {
+                    this.error.cpassword = true;
+                }
+                else {
+                    this.error.cpassword = false;
+                }
+                break;
+            default:
+                break;
         }
         this.setState({ RegisterError: "" });
     }
 
-    Data = {}
     Submit = () => {
-        this.setState({ showloading: true })
-        if (this.state.username === "" || this.state.email === "" || this.state.number === "" || this.state.password === "", this.state.confirm_password === "") {
-            this.setState({ RegisterError: "some fields are empty" })
-        }
-        else if (this.error.username !== false || this.error.email !== false || this.error.number !== false || this.error.password !== false || this.error.cpassword !== false) {
-            this.setState({ RegisterError: "enter valid details" })
-        }
-        else {
+        if (this.error.username === false && this.error.email === false && this.error.number === false && this.error.password === false && this.error.cpassword === false) {
             let userDetails = {
                 username: this.state.username,
                 email: this.state.email,
@@ -94,6 +108,7 @@ class Registration extends React.Component {
             axios.post("https://ptchatindia.herokuapp.com/register", userDetails)
                 .then(res => {
                     if (res.status === 200) {
+                        this.setState({ showloading: true })
                         this.props.submitRegister(res.data.data)
                         this.props.navigation.navigate('appScreen');
                         this.setState({ showloading: false })
@@ -101,7 +116,7 @@ class Registration extends React.Component {
                 }).catch(error => {
                     if (error.response.status === 400) {
                         console.log(error.response.status)
-                        this.setState({ RegisterError: "user already exists", showloading: false });
+                        this.setState({ RegisterError: "Username already exists", showloading: false });
                     }
                 }
                 );
@@ -109,6 +124,8 @@ class Registration extends React.Component {
     }
 
     onLoginClick = () => {
+        this.setState({ RegisterError: '', username: '', email: '', number: '', password: '', confirm_password: '' })
+        this.error = { username: '', email: '', number: '', password: '', cpassword: '' }
         this.props.navigation.navigate('login');
     }
 
@@ -138,7 +155,6 @@ class Registration extends React.Component {
         })
     }
     render() {
-        console.log("state", this.state);
         const InputData = [
             { Field: "Username", type: "default", placeholder: "Enter Username", usernameError: "enter valid username" },
             { Field: "Email", type: "email-address", placeholder: "Enter Email", emailError: "enter valid email" },
@@ -149,32 +165,42 @@ class Registration extends React.Component {
         const { photo } = this.state;
         return (
             <ScrollView contentContainerStyle={styles.bg_color}>
-                <View style={styles.container}>
-                    <Text style={styles.mainError}>{this.state.RegisterError}</Text>
-                    <Text style={styles.heading}>REGISTER</Text>
-                    <View style={styles.sub_container}>
-                        {InputData.map((input, index) =>
-                        (
-                            <View style={styles.padding1} key={index}>
-                                <Text style={styles.text}>{input.Field}</Text>
-                                <TextInput keyboardType={input.type} placeholder={input.placeholder} style={styles.input} maxLength={input.Field === 'Number' ? 10 : null} secureTextEntry={(input.Field === 'Password' || input.Field === 'Confirm Password') ? true : false} onChangeText={(value) => { this.Validate(input.Field, value) }}></TextInput>
-                                {this.error.username ? <Text style={styles.error}>{input.usernameError}</Text> : null}
-                                {this.error.email ? <Text style={styles.error}>{input.emailError}</Text> : null}
-                                {this.error.number ? <Text style={styles.error}>{input.numberError}</Text> : null}
-                                {this.error.password ? <Text style={styles.error}>{input.passwordError}</Text> : null}
-                                {this.error.cpassword ? <Text style={styles.error}>{input.cPasswordError}</Text> : null}
-                            </View>
-                        )
-                        )}
-                        <Text style={styles.profilePicText} onPress={this.pickImage}>
-                            {this.state.picSelected ? <Image source={{ uri: this.state.profilePic && this.state.profilePic }} style={styles.profilePic} />
-                                : <Image source={{ uri: 'https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg' }} style={styles.profilePic} />}
-                        </Text>
-                        <Text style={styles.image_warning} >{this.state.imageError && this.state.imageError}</Text>
-                        <Button title="SUBMIT" color='purple' onPress={() => this.Submit()} />
-                        <Text style={styles.loginText} onPress={() => { this.onLoginClick() }}>Login</Text>
+                {this.state.showloading ? <Loader /> :
+                    <View style={styles.container}>
+                        <Text style={styles.heading}>REGISTER</Text>
+                        <View style={styles.sub_container}>
+                            {InputData.map((input, index) =>
+                            (
+                                <View style={styles.padding1} key={index}>
+                                    <Text style={styles.text}>{input.Field}</Text>
+                                    <TextInput keyboardType={input.type}
+                                        placeholder={input.placeholder}
+                                        style={styles.input}
+                                        maxLength={input.Field === 'Number' ? 10 : null}
+                                        secureTextEntry={(input.Field === 'Password' || input.Field === 'Confirm Password') ? true : false}
+                                        onChangeText={(value) => { this.setDetails(input.Field, value) }}
+                                        onBlur={() => { this.Validate(input.Field) }}
+                                    >
+                                    </TextInput>
+                                    {this.error.username ? <Text style={styles.error}>{input.usernameError}</Text> : null}
+                                    {this.error.email ? <Text style={styles.error}>{input.emailError}</Text> : null}
+                                    {this.error.number ? <Text style={styles.error}>{input.numberError}</Text> : null}
+                                    {this.error.password ? <Text style={styles.error}>{input.passwordError}</Text> : null}
+                                    {this.error.cpassword ? <Text style={styles.error}>{input.cPasswordError}</Text> : null}
+                                </View>
+                            )
+                            )}
+                            <Text style={styles.profilePicText} onPress={this.pickImage}>
+                                {this.state.picSelected ? <Image source={{ uri: this.state.profilePic && this.state.profilePic }} style={styles.profilePic} />
+                                    : <Image source={{ uri: 'https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg' }} style={styles.profilePic} />}
+                            </Text>
+                            <Text style={styles.image_warning} >{this.state.imageError && this.state.imageError}</Text>
+                            <Button title="SUBMIT" color='purple' onPress={() => this.Submit()} />
+                            <Text style={styles.mainError}>{this.state.RegisterError}</Text>
+                            <Text style={styles.loginText} onPress={() => { this.onLoginClick() }}>Login</Text>
+                        </View>
                     </View>
-                </View>
+                }
             </ScrollView>
         );
     }
