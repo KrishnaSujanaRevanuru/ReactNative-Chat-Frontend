@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import { createClient } from '../../actions/actions';
 import { Dimensions } from 'react-native';
 import Iconpin from 'react-native-vector-icons/Octicons';
-import { pin_conversation, fetchContacts } from '../../actions/actions';
+import { pin_conversation, fetchContacts,latest_messages } from '../../actions/actions';
 import { logOut } from '../../actions/actions';
 import Loader from '../Loader/loader';
 import CrossIcon from 'react-native-vector-icons/Entypo'
@@ -276,6 +276,7 @@ class ChatScreen extends Component {
     this.socket.on("notification", this.onNotification);
   }
 
+
   handleNotification = (notification) => {
     let clientName = this.state.noitificationClient;
     const newArray = this.state.notifyClientData.filter((value) => {
@@ -357,6 +358,7 @@ class ChatScreen extends Component {
                 }
               }
             });
+            this.props.latest_messages(details);
             this.setState({ Data: details, usernames: usernames, isEmpty: false, showloader: false });
           }
           else {
@@ -493,10 +495,9 @@ class ChatScreen extends Component {
         break;
       default: break;
     }
-    this.props.pin_conversation(pin_data);
     this.selectedConversation = [];
     Data = Data.map(obj => ({ ...obj, popUp: false }));
-    this.setState({ select: false, Data: Data, isPin: true });
+    this.setState({ select: false, Data: Data, isPin: true },()=> {this.props.pin_conversation(pin_data),this.props.latest_messages(this.state.Data)});
   }
   selectedConversation = [];
   onChange = (userObj, index) => {
@@ -580,11 +581,11 @@ class ChatScreen extends Component {
                                 </View>
                                 <View style={styles.conversationData}>
                                   <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                  <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'} >{user.latest.message}</Text>
+                                  <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'} >{this.props.latestmsgs[index].message}</Text>
                                 </View>
                                 <View style={styles.timeContainer}>
-                                  {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
-                                  {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
+                                {this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(this.props.latestmsgs[index].timestamp)}</Text>}
+                                {this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp)}</Text>}
                                 </View>
                               </TouchableOpacity>
                               <Text style={styles.pinIcon}>{this.isPin(user.client.username) ? <Text><Iconpin size={18} color="white" name="pin" /></Text> : null}</Text>
@@ -607,11 +608,11 @@ class ChatScreen extends Component {
                               <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
                               <View style={styles.conversationData}>
                                 <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'}>{user.latest.message}</Text>
+                                <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'}>{this.props.latestmsgs[index].message}</Text>
                               </View>
                               <View style={styles.timeContainer}>
-                                {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
-                                {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
+                              {this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(this.props.latestmsgs[index].timestamp)}</Text>}
+                              {this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp)}</Text>}
                               </View>
                             </TouchableOpacity>
                             <Text style={styles.pinIcon}>{this.isPin(user.client.username) ? <Text><Iconpin size={18} color="white" name="pin" /></Text> : null}</Text>
@@ -640,7 +641,8 @@ const mapStateToProps = (state) => (
   {
     user: state.user.userDetails,
     client: state.user.client,
-    pin_data: state.user.pin_data
+    pin_data: state.user.pin_data,
+    latestmsgs: state.user.latestMessages
   }
 );
 
@@ -650,6 +652,8 @@ const mapDispatchToProps = (dispatch) => ({
   pin_conversation: (data) => dispatch(pin_conversation(data)),
   logOut: () => dispatch(logOut()),
   fetchContacts: (data) => dispatch(fetchContacts(data)),
+  latest_messages: (data) => dispatch(latest_messages(data))
+
 
 });
 
