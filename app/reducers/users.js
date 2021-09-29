@@ -1,4 +1,4 @@
-import { CREATE_CLIENT, FETCH_USER, PIN_CONVERSATION } from "../actions/actions";
+import { CREATE_CLIENT, FETCH_USER, PIN_CONVERSATION, LATEST_MESSAGES } from "../actions/actions";
 import { USER_LOGIN } from "../actions/actions";
 import { SUBMIT_REGISTER } from "../actions/actions";
 import { LOG_OUT } from "../actions/actions";
@@ -15,7 +15,8 @@ const initialState = {
     client: null,
     pin_data: [],
     starMsgs: [],
-    contacts:[]
+    contacts:[],
+    latestMessages: []
 }
 
 const userReducer = (state = initialState, action) => {
@@ -40,6 +41,19 @@ const userReducer = (state = initialState, action) => {
             return Object.assign({}, state, { starMsgs: action.data });
         case FETCHSUCCESS:
             return Object.assign({}, state, {contacts: action.payload });
+        case LATEST_MESSAGES:
+            let latestmsgs = [];
+            console.log(action.payload)
+            action.payload.map((msgs, msgsindex) => {
+                let latestMessage = '';
+                msgs.messages.map((msg, msgindex) => {
+                if (msg.is_delete === undefined) {
+                    latestMessage = msg;
+                    }
+                })
+                latestmsgs.push(latestMessage);
+            })
+            return Object.assign({}, state, { latestMessages: latestmsgs });
         default: return state
     }
 
