@@ -276,10 +276,6 @@ class ChatScreen extends Component {
     this.socket.on("notification", this.onNotification);
   }
 
-  shouldComponentUpdate=()=>{
-    // this.props.navigation.addListener("state", () => this.getConversations(), this.props.fetchContacts(this.props.user.token))
-    return true;
-  }
 
   handleNotification = (notification) => {
     let clientName = this.state.noitificationClient;
@@ -362,7 +358,6 @@ class ChatScreen extends Component {
                 }
               }
             });
-            console.log(details)
             this.props.latest_messages(details);
             this.setState({ Data: details, usernames: usernames, isEmpty: false, showloader: false });
           }
