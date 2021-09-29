@@ -37,6 +37,7 @@ class Tab extends Component {
             tabBarActiveTintColor: '#EFF7F4',
             tabBarInactiveTintColor: '#9C9E9D',
             backBehavior: "chatScreen",
+            tabBarHideOnKeyboard:true
           })
           }
         >

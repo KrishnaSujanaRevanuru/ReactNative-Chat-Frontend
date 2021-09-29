@@ -177,6 +177,12 @@ class Archive extends Component {
         this.setState({ showloader: true })
         this.getConversations();
         this.props.navigation.addListener("focus", () => this.getConversations());
+        this.props.navigation.addListener("blur",()=>{
+            this.setState({ isSearch: false,
+                searchValue: '',
+                searchData:[],
+        });
+        })
     }
 
     getConversations = () => {
@@ -204,7 +210,7 @@ class Archive extends Component {
                         this.setState({ Data: details, usernames: usernames, isEmpty: false, showloader: false });
                     }
                     else {
-                        this.setState({ isEmpty: true, showloader: false });
+                        this.setState({ isEmpty: true, showloader: false,Data:null });
                     }
                 }
             })

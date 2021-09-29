@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, Button, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Button, ScrollView, Image, Keyboard } from 'react-native';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { userLogin } from '../../actions/actions';
@@ -124,7 +124,7 @@ class Login extends React.Component {
                 </View>
               )
               )}
-              <View style={styles.loginButton}><Button title="Login" color='purple' onPress={() => this.Login()} /></View>
+              <View style={styles.loginButton}><Button title="Login" color='purple' onPress={() => {Keyboard.dismiss() ;this.Login()}} /></View>
               <Text style={styles.mainError}>{this.state.loginError}</Text>
               <Text style={styles.RegisterText} onPress={() => { this.onRegisterClick() }}>Register</Text>
             </View>
