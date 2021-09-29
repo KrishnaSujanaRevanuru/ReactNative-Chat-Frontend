@@ -92,6 +92,14 @@ class Profile extends Component {
             viewOptions: false
         };
     }
+    componentDidMount() {
+        this.props.navigation.addListener("blur",()=>this.setState({
+            headerOptions: true,
+            viewProfileImage: false,
+            viewprofilestatus: false,
+            viewOptions: false
+        }) );
+    }
     selectOptions = () => {
         if (this.state.viewOptions === false) {
             this.setState({ headerOptions: false, viewOptions: true });

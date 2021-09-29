@@ -118,10 +118,17 @@ class Contacts extends Component {
             isSearch: false
         };
     }
+    filter = []
+    searchValue = ''
     componentDidMount() {
         this.setState({ showloading: true })
         this.getContacts();
         this.props.navigation.addListener("focus", () => this.getContacts());
+        this.props.navigation.addListener("blur",()=>{ 
+            this.setState({isSearch: false,});
+            this.filter=[];
+            this.searchValue = '';
+        })
     }
     getContacts = () => {
         axios
@@ -151,8 +158,6 @@ class Contacts extends Component {
         this.props.createClient(user);
         this.props.navigation.navigate('chatRoom',{user:user.username});
     }
-    filter = []
-    searchValue = ''
     search = (contact) => {
         this.filter = []
         this.searchValue = contact

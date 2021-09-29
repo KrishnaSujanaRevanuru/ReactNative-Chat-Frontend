@@ -257,6 +257,7 @@ class ChatScreen extends Component {
     };
   }
   socket = null;
+  selectedConversation = [];
   componentDidMount() {
     this.getContacts();
     let that = this
@@ -269,6 +270,15 @@ class ChatScreen extends Component {
     this.setState({ showloader: true });
     this.getConversations();
     this.props.navigation.addListener("focus", () => this.getConversations(), this.props.fetchContacts(this.props.user.token));
+    this.props.navigation.addListener("blur", () => {
+      this.setState({
+        isSearch: false,
+        select: false,
+        searchValue: '',
+        searchData: [],
+      });
+      this.selectedConversation = [];
+    })
     this.socket = io('https://ptchatindia.herokuapp.com/', {
       transports: ['websocket'],
     });
@@ -362,7 +372,7 @@ class ChatScreen extends Component {
             this.setState({ Data: details, usernames: usernames, isEmpty: false, showloader: false });
           }
           else {
-            this.setState({ isEmpty: true, showloader: false });
+            this.setState({ isEmpty: true, showloader: false,Data: null });
           }
         }
       })
@@ -415,7 +425,7 @@ class ChatScreen extends Component {
   }
 
   onConversationClick = (user) => {
-    this.setState({ isSearch: false,select:false,searchData:[],searchValue:'' })
+    this.setState({ isSearch: false, select: false, searchData: [], searchValue: '' })
     this.props.createClient(user.client);
     this.props.navigation.navigate('chatRoom', { user: user.client.username });
   }
@@ -499,7 +509,6 @@ class ChatScreen extends Component {
     Data = Data.map(obj => ({ ...obj, popUp: false }));
     this.setState({ select: false, Data: Data, isPin: true },()=> {this.props.pin_conversation(pin_data),this.props.latest_messages(this.state.Data)});
   }
-  selectedConversation = [];
   onChange = (userObj, index) => {
     let { Data, isPin } = this.state;
     let pin_data = this.props.pin_data;
