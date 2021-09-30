@@ -9,7 +9,7 @@ const initialState = {
         username: '',
         email: '',
         mobile: '',
-        profilteredLatestMsg: '',
+        profile: '',
         token: ''
     },
     client: null,
