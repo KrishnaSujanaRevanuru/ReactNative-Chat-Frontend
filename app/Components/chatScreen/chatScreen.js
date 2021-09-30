@@ -575,8 +575,8 @@ class ChatScreen extends Component {
                         {user.client && user.latest &&
                           <View>
                             <View >
-                              <TouchableOpacity style={styles.body} onPress={() => { this.state.select ? this.onChange(user, index) : this.onConversationClick(user) }}
-                                onLongPress={() => { this.setState({ select: true }); this.onChange(user, index) }}>
+                              <TouchableOpacity style={styles.body} onPress={() => { this.state.select ? this.onChange(user, index) : this.onConversationClick(user) }} 
+                              onLongPress={() => { this.setState({ select: true }); this.onChange(user, index) }}>
                                 <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
                                 <View style={styles.CheckBox}>
                                   {this.state.select &&
@@ -590,12 +590,14 @@ class ChatScreen extends Component {
                                 </View>
                                 <View style={styles.conversationData}>
                                   <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                  <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'} >{this.props.latestmsgs[index].message}</Text>
+                                  {this.props.latestmsgs[index]?
+                                  <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'} >{this.props.latestmsgs[index].message}</Text>:null}
                                 </View>
+                                {this.props.latestmsgs[index]?
                                 <View style={styles.timeContainer}>
                                 {this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(this.props.latestmsgs[index].timestamp)}</Text>}
                                 {this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp)}</Text>}
-                                </View>
+                                </View>:null}
                               </TouchableOpacity>
                               <Text style={styles.pinIcon}>{this.isPin(user.client.username) ? <Text><Iconpin size={18} color="white" name="pin" /></Text> : null}</Text>
                             </View>
@@ -617,12 +619,14 @@ class ChatScreen extends Component {
                               <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
                               <View style={styles.conversationData}>
                                 <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'}>{this.props.latestmsgs[index].message}</Text>
+                                {this.props.latestmsgs[index]?
+                                <Text style={styles.bodyTextMessage} numberOfLines={1} ellipsizeMode={'tail'}>{this.props.latestmsgs[index].message}</Text>:null}
                               </View>
+                              {this.props.latestmsgs[index]?
                               <View style={styles.timeContainer}>
                               {this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(this.props.latestmsgs[index].timestamp)}</Text>}
                               {this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(this.props.latestmsgs[index].timestamp)}</Text>}
-                              </View>
+                              </View>:null}
                             </TouchableOpacity>
                             <Text style={styles.pinIcon}>{this.isPin(user.client.username) ? <Text><Iconpin size={18} color="white" name="pin" /></Text> : null}</Text>
                           </View>
@@ -662,8 +666,6 @@ const mapDispatchToProps = (dispatch) => ({
   logOut: () => dispatch(logOut()),
   fetchContacts: (data) => dispatch(fetchContacts(data)),
   latest_messages: (data) => dispatch(latest_messages(data))
-
-
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatScreen);
