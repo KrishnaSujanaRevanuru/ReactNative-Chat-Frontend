@@ -9,7 +9,7 @@ const initialState = {
         username: '',
         email: '',
         mobile: '',
-        profile: '',
+        profilteredLatestMsg: '',
         token: ''
     },
     client: null,
@@ -46,15 +46,13 @@ const userReducer = (state = initialState, action) => {
             action.payload.map((msgs, msgsindex) => {
                 let latestMessage = '';
                 let msg=msgs.messages;
-                const file=msg.filter(
+                const filteredLatestMsg=msg.filter(
                     msg=>msg.is_delete===undefined
                 )
-                console.log(file)
-                if(file.length>0){
-                    latestMessage=file[file.length-1];
+                if(filteredLatestMsg.length>0){
+                    latestMessage=filteredLatestMsg[filteredLatestMsg.length-1];
                 }
                 latestmsgs.push(latestMessage)
-                console.log(latestmsgs)
             })
             return Object.assign({}, state, { latestMessages: latestmsgs });
         default: return state
