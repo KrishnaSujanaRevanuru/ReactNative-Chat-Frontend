@@ -43,15 +43,18 @@ const userReducer = (state = initialState, action) => {
             return Object.assign({}, state, {contacts: action.payload });
         case LATEST_MESSAGES:
             let latestmsgs = [];
-            console.log(action.payload)
             action.payload.map((msgs, msgsindex) => {
                 let latestMessage = '';
-                msgs.messages.map((msg, msgindex) => {
-                if (msg.is_delete === undefined) {
-                    latestMessage = msg;
-                    }
-                })
-                latestmsgs.push(latestMessage);
+                let msg=msgs.messages;
+                const file=msg.filter(
+                    msg=>msg.is_delete===undefined
+                )
+                console.log(file)
+                if(file.length>0){
+                    latestMessage=file[file.length-1];
+                }
+                latestmsgs.push(latestMessage)
+                console.log(latestmsgs)
             })
             return Object.assign({}, state, { latestMessages: latestmsgs });
         default: return state

@@ -403,7 +403,7 @@ class ChatScreen extends Component {
     else if (months === 1) return (months + ' month' + ' ago');
     else if (months < 13) return (months + ' months' + ' ago');
     else if (years === 1) return (years + ' year' + ' ago')
-    else return (years + ' years' + ' ago');
+    else if (years < 1) return (years + ' years' + ' ago');
   }
   searchConversations = (data) => {
     let searchData = [];
