@@ -6,7 +6,7 @@ import { createClient } from '../../actions/actions';
 import { Dimensions } from 'react-native';
 import Options from '../headerOptions/options';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { logOut } from '../../actions/actions';
+import { logOut, archive_latest_messages} from '../../actions/actions';
 import Loader from '../Loader/loader';
 import CrossIcon from 'react-native-vector-icons/Entypo'
 
@@ -207,6 +207,7 @@ class Archive extends Component {
                                 details.push(user);
                             }
                         });
+                        this.props.archive_latest_messages(details);
                         this.setState({ Data: details, usernames: usernames, isEmpty: false, showloader: false });
                     }
                     else {
@@ -272,7 +273,7 @@ class Archive extends Component {
         else if (months === 1) return (months + ' month' + ' ago');
         else if (months < 13) return (months + ' months' + ' ago');
         else if (years === 1) return (years + ' year' + ' ago')
-        else return (years + ' years' + ' ago');
+        else if (years < 1) return (years + ' years' + ' ago');
     }
     searchConversations = (data) => {
         let searchData = [];
@@ -332,14 +333,14 @@ class Archive extends Component {
                                                         <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
                                                         <View>
                                                             <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                                            <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                                                            {this.props.archivelatestmsgs[index]?<Text style={styles.bodyTextMessage}>{this.props.archivelatestmsgs[index].message}</Text>:null}
                                                         </View>
+                                                        {this.props.archivelatestmsgs[index]?
                                                         <View style={styles.timeContainer}>
-                                                            {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
-                                                            {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
+                                                            {this.getDurationByTimestamp(this.props.archivelatestmsgs[index].timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(this.props.archivelatestmsgs[index].timestamp)}</Text>}
+                                                            {this.getDurationByTimestamp(this.props.archivelatestmsgs[index].timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(this.props.archivelatestmsgs[index].timestamp)}</Text>}
                                                         </View>
-                                                        {/* <TouchableOpacity style={styles.archive} onPress={() => { this.onUnArcheive(user.id) }}>
-                                                    <Image style={styles.archiveicon} source={ArchiveIcon} /> */}
+                                                        :null}
                                                         <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
                                                             <Text><Icon size={40} name="unarchive" /></Text>
                                                         </TouchableOpacity>
@@ -359,12 +360,13 @@ class Archive extends Component {
                                                     <Image style={styles.bodyProfile} source={{ uri: user.client.profile, }} />
                                                     <View>
                                                         <Text style={styles.bodyTextClient}>{user.client.username}</Text>
-                                                        <Text style={styles.bodyTextMessage}>{user.latest.message}</Text>
+                                                        {this.props.archivelatestmsgs[index]?<Text style={styles.bodyTextMessage}>{this.props.archivelatestmsgs[index].message}</Text>:null}
                                                     </View>
+                                                    {this.props.archivelatestmsgs[index]?
                                                     <View style={styles.timeContainer}>
-                                                        {this.getDurationByTimestamp(user.latest.timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(user.latest.timestamp)}</Text>}
-                                                        {this.getDurationByTimestamp(user.latest.timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(user.latest.timestamp)}</Text>}
-                                                    </View>
+                                                        {this.getDurationByTimestamp(this.props.archivelatestmsgs[index].timestamp) === 'Today' && <Text style={styles.time}>{this.getTimeByTimestamp(this.props.archivelatestmsgs[index].timestamp)}</Text>}
+                                                        {this.getDurationByTimestamp(this.props.archivelatestmsgs[index].timestamp) !== 'Today' && <Text style={styles.time}>{this.getDurationByTimestamp(this.props.archivelatestmsgs[index].timestamp)}</Text>}
+                                                    </View>:null}
                                                     <TouchableOpacity style={styles.archive} onPress={() => { this.onArcheive(user.id) }}>
                                                         <Text><Icon size={40} name="unarchive" /></Text>
                                                     </TouchableOpacity>
@@ -385,12 +387,15 @@ class Archive extends Component {
 const mapStateToProps = (state) => (
     {
         user: state.user.userDetails,
-        client: state.user.client
+        client: state.user.client,
+        latestmsgs: state.user.latestMessages,
+        archivelatestmsgs:state.user.archivelatestMessages
     }
 );
 const mapDispatchToProps = (dispatch) => ({
     createClient: (data) => dispatch(createClient(data)),
     logOut: () => dispatch(logOut()),
+    archive_latest_messages : (data) => dispatch(archive_latest_messages(data))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Archive);

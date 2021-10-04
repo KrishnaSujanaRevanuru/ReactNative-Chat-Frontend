@@ -8,6 +8,7 @@ export const PIN_CONVERSATION = "PIN_CONVERSATION";
 export const STAR_MSGS = 'STAR_MSGS';
 export const FETCHSUCCESS='FETCHSUCCESS';
 export const LATEST_MESSAGES = "LATEST_MESSAGES";
+export const ARCHIVE_LATEST_MESSAGES="ARCHIVE_LATEST_MESSAGES";
 
 export const fetchUser = (user) => {
     return {
@@ -52,6 +53,11 @@ export const fetchSuccess=(data)=>({
 export const latest_messages = (data) => ({
     type: LATEST_MESSAGES,
     payload: data
+})
+
+export const archive_latest_messages=(data)=>({
+    type: ARCHIVE_LATEST_MESSAGES,
+    payload:data
 })
 
 export const fetchContacts = (token) => {
